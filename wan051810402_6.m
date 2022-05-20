@@ -22,7 +22,7 @@ function varargout = wan051810402_6(varargin)
 
 % Edit the above text to modify the response to help wan051810402_6
 
-% Last Modified by GUIDE v2.5 19-May-2022 12:35:12
+% Last Modified by GUIDE v2.5 20-May-2022 15:23:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1521,20 +1521,20 @@ end
 
 
 % --- Executes on slider movement.
-function sped_Callback(hObject, eventdata, handles)
-% hObject    handle to sped (see GCBO)
+function speedslider_Callback(hObject, eventdata, handles)
+% hObject    handle to speedslider (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global speed;
-speed=1/get(handles.sped,'value');
+speed=1/get(handles.speedslider,'value');
 set(handles.speed,'string',num2str(1/speed));
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 
 
 % --- Executes during object creation, after setting all properties.
-function sped_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sped (see GCBO)
+function speedslider_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to speedslider (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1554,7 +1554,7 @@ function speed_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of speed as a double
 global speed;
 speed=1/str2double(get(handles.speed,'string'));
-set(handles.sped,'value',1/speed);
+set(handles.speedslider,'value',1/speed);
 
 % --- Executes during object creation, after setting all properties.
 function speed_CreateFcn(hObject, eventdata, handles)
@@ -1588,7 +1588,7 @@ set(handles.CYe,'string',[]);
 set(handles.CXr,'string',[]);
 set(handles.CYr,'string',[]);
 set(handles.leftmove,'value',0);
-set(handles.sped,'value',0);
+set(handles.speedslider,'value',0);
 set(handles.CR,'string',[]);
 
 
@@ -1625,3 +1625,12 @@ function pointIP_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of pointIP
+
+
+% --- Executes on button press in noload.
+function noload_Callback(hObject, eventdata, handles)
+% hObject    handle to noload (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of noload

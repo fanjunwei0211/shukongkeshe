@@ -2,7 +2,6 @@ X0=0;
 Y0=0;
 Xe=6;
 Ye=8;
-u1=0;
 Regbit=4;  %寄存器位数
 steplen=1; %进给步长
 speed=1;  %pause(speed/100)
@@ -30,7 +29,6 @@ if ((X0==Xe)&&(Y0==Ye))
      warndlg('首尾坐标相同，输入无效，请重新输入','警告','on');
 end
 
-u1=0;
 plot([X0,Xe],[Y0,Ye],'k');
 dx=abs(X0-Xe);
 dy=abs(Y0-Ye);
@@ -107,7 +105,7 @@ switch t
             if  (PX2==PX1&&PY2==PY1)
             else
                 plot([PX1,PX2],[PY1,PY2],'b','linewidth',1);
-                pause(speed/100);
+                pause(100/speed);
             end
             PX1=PX2;
             PY1=PY2;
@@ -129,7 +127,7 @@ switch t
             if  (PX2==PX1&&PY2==PY1)
             else
                 plot([PX1,PX2],[PY1,PY2],'y','linewidth',1);
-                pause(speed/100);
+                pause(100/speed);
             end
             PX1=PX2;
             PY1=PY2;
@@ -151,7 +149,7 @@ switch t
             if  (PX2==PX1&&PY2==PY1)
             else
                 plot([PX1,PX2],[PY1,PY2],'y','linewidth',1);
-                pause(speed/100);
+                pause(100/speed);
             end
             PX1=PX2;
             PY1=PY2;
@@ -173,7 +171,7 @@ switch t
             if  (PX2==PX1&&PY2==PY1)
             else
                 plot([PX1,PX2],[PY1,PY2],'y','linewidth',1);
-                pause(speed/100);
+                pause(100/speed);
             end
             PX1=PX2;
             PY1=PY2;
@@ -197,7 +195,7 @@ if ruinmode==1 %逐点法
                     Ex1=abs(X-Xe);
                 else
                     plot([X,X],[Y,Y+steplen],'y','linewidth',1);
-                    pause(speed/100);
+                    pause(100/speed);
                     F=F+abs(Xe-X0)*steplen;
                     Y=Y+steplen;
                     Ey1=abs(Y-Ye);
@@ -207,13 +205,13 @@ if ruinmode==1 %逐点法
             while Ex1>0.5*steplen||Ey1>0.5*steplen
                 if F>=0
                     plot([X,X-steplen],[Y,Y],'y','linewidth',1);
-                    pause(speed/100);
+                    pause(100/speed);
                     F=F-abs(Ye-Y0)*steplen;
                     X=X-steplen;
                     Ex1=abs(X-Xe);
                 else
                     plot([X,X],[Y,Y+steplen],'y,','linewidth',1');
-                    pause(speed/100);
+                    pause(100/speed);
                     F=F+abs(Xe-X0)*steplen;
                     Y=Y+steplen;
                     Ey1=abs(Y-Ye);
@@ -223,13 +221,13 @@ if ruinmode==1 %逐点法
             while Ex1>0.5*steplen||Ey1>0.5*steplen
                 if F>=0
                     plot([X,X-steplen],[Y,Y],'y','linewidth',1);
-                    pause(speed/100);
+                    pause(100/speed);
                     F=F-abs(Ye-Y0)*steplen;
                     X=X-steplen;
                     Ex1=abs(X-Xe);
                 else
                     plot([X,X],[Y,Y-steplen],'y','linewidth',1);
-                    pause(speed/100);
+                    pause(100/speed);
                     F=F+abs(Xe-X0)*steplen;
                     Y=Y-steplen;
                     Ey1=abs(Y-Ye);
@@ -239,7 +237,7 @@ if ruinmode==1 %逐点法
             while Ex1>0.5*steplen||Ey1>0.5*steplen
                 if F>=0
                     plot([X,X+steplen],[Y,Y],'y','linewidth',1);
-                    pause(speed/100);
+                    pause(100/speed);
                     F=F-abs(Ye-Y0)*steplen;
                     X=X+steplen;
                     Ex1=abs(X-Xe);
