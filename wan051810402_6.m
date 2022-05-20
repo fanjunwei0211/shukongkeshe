@@ -22,7 +22,7 @@ function varargout = wan051810402_6(varargin)
 
 % Edit the above text to modify the response to help wan051810402_6
 
-% Last Modified by GUIDE v2.5 18-Jun-2021 15:41:25
+% Last Modified by GUIDE v2.5 19-May-2022 12:35:12
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1590,3 +1590,38 @@ set(handles.CYr,'string',[]);
 set(handles.leftmove,'value',0);
 set(handles.sped,'value',0);
 set(handles.CR,'string',[]);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over cicle.
+function cicle_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to cicle (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object creation, after setting all properties.
+function axes1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to axes1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: place code in OpeningFcn to populate axes1
+
+
+% --- Executes on button press in DDA.
+function DDA_Callback(hObject, eventdata, handles)
+% hObject    handle to DDA (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of DDA
+
+
+% --- Executes on button press in pointIP.
+function pointIP_Callback(hObject, eventdata, handles)
+% hObject    handle to pointIP (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of pointIP
