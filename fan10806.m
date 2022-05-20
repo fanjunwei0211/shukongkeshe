@@ -1,7 +1,7 @@
 function varargout = fan10806(varargin)
 % FAN10806 MATLAB code for fan10806.fig
 %      FAN10806, by itself, creates a new FAN10806 or raises the existing
-%      singleton*.
+%      singleton*
 %
 %      H = FAN10806 returns the handle to a new FAN10806 or the handle to
 %      the existing singleton*.
@@ -22,7 +22,7 @@ function varargout = fan10806(varargin)
 
 % Edit the above text to modify the response to help fan10806
 
-% Last Modified by GUIDE v2.5 20-May-2022 20:03:33
+% Last Modified by GUIDE v2.5 21-May-2022 00:30:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -42,10 +42,7 @@ else
     gui_mainfcn(gui_State, varargin{:});
 end
 % End initialization code - DO NOT EDIT
-X0=0;
-Y0=0;
-Xe=0;
-Ye=0;
+X0=0;Y0=0;Xe=0;Ye=0;CX0=0;CY0=0;CXe=0;CYe=0;CR=0;clockwise=0;
 regbit=3;  %寄存器位数 默认3
 steplen=1; %进给步长   默认1
 speed=50;  %pause(speed/100)
@@ -53,7 +50,6 @@ ruinmode=1;    %插补模式选择0-->DDA   1-->逐点比较法
 loadmode=0;    %加载模式选择0-->0     2-->半加载     3-->全加载
 leftmode=0;    %左移规格化  0-->关闭  1-->开启
 stepcnt=0;     %步进插补控制量 0-->初始化  1-->初始化完成     
-picturecnt=0;
 
 
 % --- Executes just before fan10806 is made visible.
@@ -252,15 +248,26 @@ function pushbutton3_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global stepcnt;
-set(handles.speed,'string','0');
-set(handles.X0,'string','0');
+global speed Xe Y0 Ye steplen regbit;
+speed=10;Xe=0;Y0=0;Ye=0;steplen=1;regbit=3;
+set(handles.speed,'string','10');
+set(handles.CX0,'string','0');
 set(handles.Xe,'string','0');
 set(handles.Y0,'string','0');
 set(handles.Ye,'string','0');
-set(handles.steplen,'string','0');
-set(handles.regbit,'string','0');
-set(handles.speedslider,'value',0);
+set(handles.steplen,'string','1');
+set(handles.regbit,'string','3');
+set(handles.speedslider,'value',10);
 stepcnt=0;
+global CX0 CY0 CXe CYe CR clockwise;
+CX0=0;CY0=0;CXe=0;CYe=0;CR=0;clockwise=0;
+set(handles.CX0,'string','0');
+set(handles.CY0,'string','0');
+set(handles.CXe,'string','0');
+set(handles.CYe,'string','0');
+set(handles.CXr,'string','0');
+set(handles.CR,'string','0');
+set(handles.CYr,'string','0');
 
 % --- Executes on button press in leftmove.
 function leftmove_Callback(hObject, eventdata, handles)
@@ -279,19 +286,19 @@ end
 
 
 function X0_Callback(hObject, eventdata, handles)
-% hObject    handle to X0 (see GCBO)
+% hObject    handle to CX0 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global X0;
 X0=str2double(get(handles.X0,'String'));
 
-% Hints: get(hObject,'String') returns contents of X0 as text
-%        str2double(get(hObject,'String')) returns contents of X0 as a double
+% Hints: get(hObject,'String') returns contents of CX0 as text
+%        str2double(get(hObject,'String')) returns contents of CX0 as a double
 
 
 % --- Executes during object creation, after setting all properties.
 function X0_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to X0 (see GCBO)
+% hObject    handle to CX0 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -409,7 +416,7 @@ function stepline_Callback(hObject, eventdata, handles)
 % hObject    handle to stepline (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% global X0 Y0 Xe Ye regbit steplen speed ruinmode loadmode leftmode;
+% global CX0 Y0 Xe Ye regbit steplen speed ruinmode loadmode leftmode;
 global X0 Y0 Xe Ye regbit steplen speed ruinmode loadmode leftmode stepcnt;
 global PX1 PY1 PX2 PY2 Jvx Jvy Jrx Jry Ex0 Ey0 OF X Y F Ex1 Ey1;
 cnt=0;
@@ -885,12 +892,7 @@ function savefig_Callback(hObject, eventdata, handles)
 % hObject    handle to savefig (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global picturecnt;
-picturecnt  = picturecnt+1;
 axes(handles.axes1);
-% frame = getframe; % 获得当前坐标区的内容
-% im = frame.cdata; % 获得图像数据
-% imwrite(im,'modified_a.png'); 
 h = figure('visible','off');
 new_axes = copyobj(handles.axes1,h);%axes1表示坐标系对象
 set(new_axes,'Units','normalized','Position',[0.1 0.1 0.8 0.8]);
@@ -999,18 +1001,19 @@ function stepline_CreateFcn(hObject, eventdata, handles)
 
 
 
-function Xr0_Callback(hObject, eventdata, handles)
-% hObject    handle to Xr0 (see GCBO)
+function CX0_Callback(hObject, eventdata, handles)
+% hObject    handle to CX0 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of Xr0 as text
-%        str2double(get(hObject,'String')) returns contents of Xr0 as a double
+global CX0;
+CX0=str2double(get(handles.CX0,'String'));
+% Hints: get(hObject,'String') returns contents of CX0 as text
+%        str2double(get(hObject,'String')) returns contents of CX0 as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function Xr0_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to Xr0 (see GCBO)
+function CX0_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to CX0 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1026,7 +1029,88 @@ function thecircle_Callback(hObject, eventdata, handles)
 % hObject    handle to thecircle (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+global CX0 CY0 CXe CYe CR CXr CYr CA0 CAe clockwise;
+axes(handles.axes1);
+if ((CX0-CXr)^2+(CY0-CYr)^2)~=((CXe-CXr)^2+(CYe-CYr)^2)
+    warndlg('圆心坐标错误','警告','on');
+else
+    CR=sqrt((CX0-CXr)^2+(CY0-CYr)^2);
+    set(handles.CR,'string',num2str(CR));
+    CX0r=CX0-CXr;
+    CY0r=CY0-CYr;
+    CXer=CXe-CXr;
+    CYer=CYe-CYr;
+    if CX0r>0
+        if CY0r>0
+            CA0=abs(atan(CY0r./CX0r));
+        elseif CY0r==0
+            CA0=0;
+        else
+            CA0=2*pi-abs(atan(CY0r./CX0r));
+        end
+    elseif CX0r==0
+        if CY0r>0
+            CA0=pi/2;
+        else
+            CA0=pi*3/2;
+        end
+    else
+        if CY0r>0
+            CA0=pi-abs(atan(CY0r./CX0r));
+        elseif CY0r==0
+            CA0=pi;
+        else
+            CA0=pi+abs(atan(CY0r./CX0r));
+        end
+    end
+    if CXer>0
+        if CYer>0
+            CAe=abs(atan(CYer./CXer));
+        elseif CYer==0
+            CAe=0;
+        else
+            CAe=2*pi-abs(atan(CYer./CXer));
+        end
+    elseif CXer==0
+        if CYer>0
+            CAe=pi/2;
+        else
+            CAe=pi*3/2;
+        end
+    else
+        if CYer>0
+            CAe=pi-abs(atan(CYer./CXer));
+        elseif CYer==0
+            CAe=pi;
+        else
+            CAe=pi+abs(atan(CYer./CXer));
+        end
+    end
+    
+    %理论圆弧绘制
+    if clockwise==1  %顺圆弧
+        if CAe>CA0
+            t=CA0:0.01:CAe;
+        else
+            t=CA0:0.01:CAe+2*pi;
+        end
+    else
+        if CAe>=CA0
+            t=CAe:0.01:CA0+2*pi;
+        else
+            t=CAe:0.01:CA0;
+        end
+    end
+    cx=CR*cos(t)+CXr;
+    cy=CR*sin(t)+CYr;
+    plot(cx,cy,'black');%,'linewidth',1.5
+    hold on;
+    plot(CXr,CYr)
+    axis([CXr-CR*1.2,CXr+CR*1.2,CYr-CR*1.2,CYr+CR*1.2]);
+    axis square;
+    grid on;
+    hold on;
+end
 
 
 function edit17_Callback(hObject, eventdata, handles)
@@ -1112,18 +1196,19 @@ function contcircle_Callback(hObject, eventdata, handles)
 
 
 
-function Yr0_Callback(hObject, eventdata, handles)
-% hObject    handle to Yr0 (see GCBO)
+function CY0_Callback(hObject, eventdata, handles)
+% hObject    handle to CY0 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of Yr0 as text
-%        str2double(get(hObject,'String')) returns contents of Yr0 as a double
+global CY0;
+CY0=str2double(get(handles.CY0,'String'));
+% Hints: get(hObject,'String') returns contents of CY0 as text
+%        str2double(get(hObject,'String')) returns contents of CY0 as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function Yr0_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to Yr0 (see GCBO)
+function CY0_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to CY0 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1135,18 +1220,19 @@ end
 
 
 
-function Xre_Callback(hObject, eventdata, handles)
-% hObject    handle to Xre (see GCBO)
+function CXe_Callback(hObject, eventdata, handles)
+% hObject    handle to CXe (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of Xre as text
-%        str2double(get(hObject,'String')) returns contents of Xre as a double
+global CXe;
+CXe=str2double(get(handles.CXe,'String'));
+% Hints: get(hObject,'String') returns contents of CXe as text
+%        str2double(get(hObject,'String')) returns contents of CXe as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function Xre_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to Xre (see GCBO)
+function CXe_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to CXe (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1158,18 +1244,19 @@ end
 
 
 
-function Yre_Callback(hObject, eventdata, handles)
-% hObject    handle to Yre (see GCBO)
+function CYe_Callback(hObject, eventdata, handles)
+% hObject    handle to CYe (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of Yre as text
-%        str2double(get(hObject,'String')) returns contents of Yre as a double
+global CYe;
+CYe=str2double(get(handles.CYe,'String'));
+% Hints: get(hObject,'String') returns contents of CYe as text
+%        str2double(get(hObject,'String')) returns contents of CYe as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function Yre_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to Yre (see GCBO)
+function CYe_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to CYe (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1181,18 +1268,19 @@ end
 
 
 
-function Xr_Callback(hObject, eventdata, handles)
-% hObject    handle to Xr (see GCBO)
+function CXr_Callback(hObject, eventdata, handles)
+% hObject    handle to CXr (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of Xr as text
-%        str2double(get(hObject,'String')) returns contents of Xr as a double
+global CXr;
+CXr=str2double(get(handles.CXr,'String'));
+% Hints: get(hObject,'String') returns contents of CXr as text
+%        str2double(get(hObject,'String')) returns contents of CXr as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function Xr_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to Xr (see GCBO)
+function CXr_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to CXr (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1204,18 +1292,19 @@ end
 
 
 
-function Yr_Callback(hObject, eventdata, handles)
-% hObject    handle to Yr (see GCBO)
+function CYr_Callback(hObject, eventdata, handles)
+% hObject    handle to CYr (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of Yr as text
-%        str2double(get(hObject,'String')) returns contents of Yr as a double
+global CYr;
+CYr=str2double(get(handles.CYr,'String'));
+% Hints: get(hObject,'String') returns contents of CYr as text
+%        str2double(get(hObject,'String')) returns contents of CYr as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function Yr_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to Yr (see GCBO)
+function CYr_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to CYr (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1231,7 +1320,8 @@ function CR_Callback(hObject, eventdata, handles)
 % hObject    handle to CR (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+% global CR;
+% CR=str2double(get(handles.CR,'String'));
 % Hints: get(hObject,'String') returns contents of CR as text
 %        str2double(get(hObject,'String')) returns contents of CR as a double
 
@@ -1254,8 +1344,12 @@ function anticlockwise_Callback(hObject, eventdata, handles)
 % hObject    handle to anticlockwise (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global clockw;
-clockw = 0;
+global clockwise;
+if get(handles.anticlockwise,'value')
+    clockwise=1;
+else
+    clockwise=0;
+end
 set(handles.clockwise,'value',0);
 set(handles.anticlockwise,'value',1);
 % Hint: get(hObject,'Value') returns toggle state of anticlockwise
@@ -1266,8 +1360,12 @@ function clockwise_Callback(hObject, eventdata, handles)
 % hObject    handle to clockwise (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global clockw;
-clockw = 1;
+global clockwise;
+if get(handles.clockwise,'value')
+    clockwise=0;
+else
+    clockwise=1;
+end
 set(handles.clockwise,'value',1);
 set(handles.anticlockwise,'value',0);
 % Hint: get(hObject,'Value') returns toggle state of clockwise
