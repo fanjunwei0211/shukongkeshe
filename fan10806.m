@@ -248,10 +248,10 @@ function pushbutton3_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global stepcnt;
-global speed Xe Y0 Ye steplen regbit;
-speed=10;Xe=0;Y0=0;Ye=0;steplen=1;regbit=3;
+global speed X0 Xe Y0 Ye steplen regbit;
+speed=10;X0=0;Y0=0;Xe=0;Ye=0;steplen=1;regbit=3;
 set(handles.speed,'string','10');
-set(handles.CX0,'string','0');
+set(handles.X0,'string','0');
 set(handles.Xe,'string','0');
 set(handles.Y0,'string','0');
 set(handles.Ye,'string','0');
@@ -1088,7 +1088,7 @@ else
     end
     
     %理论圆弧绘制
-    if clockwise==1  %顺圆弧
+    if clockwise==0  %逆圆弧
         if CAe>CA0
             t=CA0:0.01:CAe;
         else
@@ -1193,7 +1193,129 @@ function contcircle_Callback(hObject, eventdata, handles)
 % hObject    handle to contcircle (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+global CX0 CY0 CXr CYr CXe CYe steplen clockwise speed;
+X=CX0;
+Y=CY0;
+CPx=X-CXr;
+CPy=Y-CYr;
+dx=steplen;
+dy=steplen;
+F=0;
+if clockwise==0   %逆圆弧
+    while (sqrt((X-CXe)^2+(Y-CYe)^2))>=steplen
+        if CPx>0 && CPy>=0   %1象限
+            if F>=0
+                F=F-2*steplen*CPx+steplen^2;
+                plot([X,X-dx],[Y,Y],'b','linewidth',1)
+                X=X-dx;
+                pause(1/speed);
+            else
+                F=F+2*steplen*CPy+steplen^2;
+                plot([X,X],[Y,Y+dy],'b','linewidth',1)
+                Y=Y+dy;
+                pause(1/speed);
+            end
+        end
+        if CPx<=0 && CPy>0   %2象限
+            if F>=0
+                F=F-2*steplen*CPy+steplen^2;
+                plot([X,X],[Y,Y-dy],'b','linewidth',1)
+                Y=Y-dy;
+                pause(1/speed);
+            else
+                F=F-2*steplen*CPx+steplen^2;
+                plot([X,X-dx],[Y,Y],'b','linewidth',1)
+                X=X-dx;
+                pause(1/speed);
+            end
+        end
+        if CPx<0 && CPy<=0   %3象限
+            if F>=0
+                F=F+2*steplen*CPx+steplen^2;
+                plot([X,X+dx],[Y,Y],'b','linewidth',1)
+                X=X+dx;
+                pause(1/speed);
+            else
+                F=F-2*CPy*steplen+steplen^2;
+                plot([X,X],[Y,Y-dy],'b','linewidth',1)
+                Y=Y-dy;
+                pause(1/speed);
+            end
+        end
+        if CPx>=0 && CPy<0                   %4象限
+            if F>=0
+                F=F+2*steplen*CPy+steplen^2;
+                plot([X,X],[Y,Y+dy],'b','linewidth',1)
+                Y=Y+dy;
+                pause(1/speed);
+            else
+                F=F+2*steplen*CPx+steplen^2;
+                plot([X,X+dx],[Y,Y],'b','linewidth',1)
+                X=X+dx;
+                pause(1/speed);
+            end
+        end
+        CPx=X-CXr;
+        CPy=Y-CYr;
+    end
+else
+    while (sqrt((X-CXe)^2+(Y-CYe)^2))>=steplen
+        if CPx>0 && CPy<=0   %4象限
+            if F>=0
+                F=F-2*steplen*CPx+steplen^2;
+                plot([X,X-dx],[Y,Y],'b','linewidth',1)
+                X=X-dx;
+                pause(1/speed);
+            else
+                F=F-2*steplen*CPy+steplen^2;
+                plot([X,X],[Y,Y-dy],'b','linewidth',1)
+                Y=Y-dy;
+                pause(1/speed);
+            end
+        end
+        if CPx<=0 && CPy<0   %3象限
+            if F>=0
+                F=F+2*steplen*CPy+steplen^2;
+                plot([X,X],[Y,Y+dy],'b','linewidth',1)
+                Y=Y+dy;
+                pause(1/speed);
+            else
+                F=F-2*steplen*CPx+steplen^2;
+                plot([X,X-dx],[Y,Y],'b','linewidth',1)
+                X=X-dx;
+                pause(1/speed);
+            end
+        end
+        if CPx<0 && CPy>=0   %2象限
+            if F>=0
+                F=F+2*steplen*CPx+steplen^2;
+                plot([X,X+dx],[Y,Y],'b','linewidth',1)
+                X=X+dx;
+                pause(1/speed);
+            else
+                F=F+2*steplen*CPy+steplen^2;
+                plot([X,X],[Y,Y+dy],'b','linewidth',1)
+                Y=Y+dy;
+                pause(1/speed);
+            end
+        end
+        if CPx>=0 && CPy>0   %1象限
+            if F>=0
+                F=F-2*steplen*CPy+steplen^2;
+                plot([X,X],[Y,Y-dy],'b','linewidth',1)
+                Y=Y-dy;
+                pause(1/speed);
+            else
+                F=F+2*steplen*CPx+steplen^2;
+                plot([X,X+dx],[Y,Y],'b','linewidth',1)
+                X=X+dx;
+                pause(1/speed);
+            end
+        end
+        CPx=X-CXr;
+        CPy=Y-CYr;
+    end
+end
 
 
 function CY0_Callback(hObject, eventdata, handles)
@@ -1346,9 +1468,9 @@ function anticlockwise_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global clockwise;
 if get(handles.anticlockwise,'value')
-    clockwise=1;
-else
     clockwise=0;
+else
+    clockwise=1;
 end
 set(handles.clockwise,'value',0);
 set(handles.anticlockwise,'value',1);
@@ -1362,9 +1484,9 @@ function clockwise_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global clockwise;
 if get(handles.clockwise,'value')
-    clockwise=0;
-else
     clockwise=1;
+else
+    clockwise=0;
 end
 set(handles.clockwise,'value',1);
 set(handles.anticlockwise,'value',0);
