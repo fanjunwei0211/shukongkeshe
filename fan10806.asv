@@ -1375,10 +1375,6 @@ if ruinmode==0 %DDA法
         warndlg("寄存器位数错误无法完成差补")
         return;
     end
-    if fix(abs(CX0-CXr)/steplen) ~= abs(CX0-CXr)/steplen || fix(abs(CY0-CYr)/steplen) ~= abs(CY0-CYr)/steplen
-        warndlg("DDA进给步长错误无法完成差补")
-        return;
-    end
     if loadmode==1
         Jrx=OF/2;
         Jry=OF/2;
@@ -1882,8 +1878,7 @@ dy=steplen;
 F=0;                %逐点法判别式F
 cnt = 0;            %插补整圆
 if fix(abs(CX0-CXe)/steplen) ~= abs(CX0-CXe)/steplen || fix(abs(CY0-CYe)/steplen) ~= abs(CY0-CYe)/steplen
-    warndlg("进给步长错误无法完成差补")
-    return;
+    
 end
 if ruinmode==1 %逐点法
     if clockwise==0   %逆圆弧
@@ -2029,10 +2024,6 @@ if ruinmode==0 %DDA法
     CEy = [0 0 0 0];
     if CR/steplen>OF
         warndlg("寄存器位数错误无法完成差补")
-        return;
-    end
-    if fix(abs(CX0-CXr)/steplen) ~= abs(CX0-CXr)/steplen || fix(abs(CY0-CYr)/steplen) ~= abs(CY0-CYr)/steplen
-        warndlg("DDA进给步长错误无法完成差补")
         return;
     end
     if loadmode==1
@@ -2360,7 +2351,7 @@ if ruinmode==0 %DDA法
             CPx=PX1-CXr;
             CPy=PY1-CYr;
         end
-    else   %顺圆弧
+    else   %圆弧
         while CEx(1)>0 || CEx(2)>0 || CEx(3)>0 || CEx(4)>0 || CEy(1)>0 || CEy(2)>0 || CEy(3)>0 || CEy(4)>0
             if xflag
                 Jrx=Jrx+Jvx;
