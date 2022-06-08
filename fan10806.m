@@ -22,7 +22,7 @@ function varargout = fan10806(varargin)
 
 % Edit the above text to modify the response to help fan10806
 
-% Last Modified by GUIDE v2.5 21-May-2022 00:30:35
+% Last Modified by GUIDE v2.5 25-May-2022 15:03:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -42,7 +42,7 @@ else
     gui_mainfcn(gui_State, varargin{:});
 end
 % End initialization code - DO NOT EDIT
-X0=0;Y0=0;Xe=0;Ye=0;CX0=0;CY0=0;CXe=0;CYe=0;CR=0;clockwise=0;
+X0=0;Y0=0;Xe=0;Ye=0;CX0=0;CY0=0;CXe=0;CYe=0;CR=0;clockwise=1;
 regbit=3;  %寄存器位数 默认3
 steplen=1; %进给步长   默认1
 speed=50;  %pause(speed/100)
@@ -468,6 +468,10 @@ if (Xe>X0&&Ye<Y0)   %第四象限
    t=4;
 end
 if ruinmode==0 %DDA法
+    if Jvx>OF || Jvy>OF
+        warndlg("寄存器位数错误无法完成差补")
+        return;
+    end
     while cnt==0
         switch t
             case 1 %第一象限
@@ -690,6 +694,10 @@ end
 
 
 if ruinmode==0 %DDA法
+    if Jvx>OF || Jvy>OF
+        warndlg("寄存器位数错误无法完成差补")
+        return;
+    end
     if loadmode==1
         Jrx=OF/2;
         Jry=OF/2;
@@ -704,7 +712,7 @@ if ruinmode==0 %DDA法
         Jvy=Jvy*2;
         end
     end
-switch t
+    switch t
     case 1 %第一象限
         while Ex0>0.5*steplen||Ey0>0.5*steplen
             Jrx=Jrx+Jvx;
@@ -806,7 +814,7 @@ if ruinmode==1 %逐点法
     Ey1=abs(Y-Ye);
     switch t
         case 1  %第一象限
-            while Ex1>0.5*steplen||Ey1>0.5*steplen
+            while Ex1>0.5*steplen || Ey1>0.5*steplen
                 if F>=0
                     plot([X,X+steplen],[Y,Y],'r','linewidth',1);
                     pause(1/speed);
@@ -1186,134 +1194,1311 @@ function stepcircle_Callback(hObject, eventdata, handles)
 % hObject    handle to stepcircle (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global CX0 CY0 CXr CYr CXe CYe steplen clockwise speed ruinmode regbit CR;
+X=CX0;              %逐点法当前X坐标
+Y=CY0;              %逐点法当前Y坐标
+CPx=X-CXr;          %逐点法当前相对X坐标
+CPy=Y-CYr;          %逐点法当前相对X坐标
+dx=steplen;
+dy=steplen;
+F=0;                %逐点法判别式F
+cnt = 0;            %插补整圆
+axes(handles.axes1);
+if ruinmode==1 %逐点法
+    if clockwise==0   %逆圆弧
+        while (sqrt((X-CXe)^2+(Y-CYe)^2))>=steplen || cnt==0
+            cnt = 1;
+            if CPx>0 && CPy>=0   %1象限
+                if F>=0
+                    F=F-2*steplen*CPx+steplen^2;
+                    plot([X,X-dx],[Y,Y],'b','linewidth',1)
+                    X=X-dx;
+                    f=helpdlg("继续插补","NEXT");
+                    waitfor(f);
+                else
+                    F=F+2*steplen*CPy+steplen^2;
+                    plot([X,X],[Y,Y+dy],'b','linewidth',1)
+                    Y=Y+dy;
+                    f=helpdlg("继续插补","NEXT");
+                    waitfor(f);
+                end
+            end
+            if CPx<=0 && CPy>0   %2象限
+                if F>=0
+                    F=F-2*steplen*CPy+steplen^2;
+                    plot([X,X],[Y,Y-dy],'b','linewidth',1)
+                    Y=Y-dy;
+                    f=helpdlg("继续插补","NEXT");
+                    waitfor(f);
+                else
+                    F=F-2*steplen*CPx+steplen^2;
+                    plot([X,X-dx],[Y,Y],'b','linewidth',1)
+                    X=X-dx;
+                    f=helpdlg("继续插补","NEXT");
+                    waitfor(f);
+                end
+            end
+            if CPx<0 && CPy<=0   %3象限
+                if F>=0
+                    F=F+2*steplen*CPx+steplen^2;
+                    plot([X,X+dx],[Y,Y],'b','linewidth',1)
+                    X=X+dx;
+                    f=helpdlg("继续插补","NEXT");
+                    waitfor(f);
+                else
+                    F=F-2*CPy*steplen+steplen^2;
+                    plot([X,X],[Y,Y-dy],'b','linewidth',1)
+                    Y=Y-dy;
+                    f=helpdlg("继续插补","NEXT");
+                    waitfor(f);
+                end
+            end
+            if CPx>=0 && CPy<0                   %4象限
+                if F>=0
+                    F=F+2*steplen*CPy+steplen^2;
+                    plot([X,X],[Y,Y+dy],'b','linewidth',1)
+                    Y=Y+dy;
+                    f=helpdlg("继续插补","NEXT");
+                    waitfor(f);
+                else
+                    F=F+2*steplen*CPx+steplen^2;
+                    plot([X,X+dx],[Y,Y],'b','linewidth',1)
+                    X=X+dx;
+                    f=helpdlg("继续插补","NEXT");
+                    waitfor(f);
+                end
+            end
+            CPx=X-CXr;
+            CPy=Y-CYr;
+        end
+    else  
+        while (sqrt((X-CXe)^2+(Y-CYe)^2))>=steplen || cnt == 0
+            cnt = 1;
+            if CPx>0 && CPy<=0   %4象限
+                if F>=0
+                    F=F-2*steplen*CPx+steplen^2;
+                    plot([X,X-dx],[Y,Y],'b','linewidth',1)
+                    X=X-dx;
+                    f=helpdlg("继续插补","NEXT");
+                    waitfor(f);
+                else
+                    F=F-2*steplen*CPy+steplen^2;
+                    plot([X,X],[Y,Y-dy],'b','linewidth',1)
+                    Y=Y-dy;
+                    f=helpdlg("继续插补","NEXT");
+                    waitfor(f);
+                end
+            end
+            if CPx<=0 && CPy<0   %3象限
+                if F>=0
+                    F=F+2*steplen*CPy+steplen^2;
+                    plot([X,X],[Y,Y+dy],'b','linewidth',1)
+                    Y=Y+dy;
+                    f=helpdlg("继续插补","NEXT");
+                    waitfor(f);
+                else
+                    F=F-2*steplen*CPx+steplen^2;
+                    plot([X,X-dx],[Y,Y],'b','linewidth',1)
+                    X=X-dx;
+                    f=helpdlg("继续插补","NEXT");
+                    waitfor(f);
+                end
+            end
+            if CPx<0 && CPy>=0   %2象限
+                if F>=0
+                    F=F+2*steplen*CPx+steplen^2;
+                    plot([X,X+dx],[Y,Y],'b','linewidth',1)
+                    X=X+dx;
+                    f=helpdlg("继续插补","NEXT");
+                    waitfor(f);
+                else
+                    F=F+2*steplen*CPy+steplen^2;
+                    plot([X,X],[Y,Y+dy],'b','linewidth',1)
+                    Y=Y+dy;
+                    f=helpdlg("继续插补","NEXT");
+                    waitfor(f);
+                end
+            end
+            if CPx>=0 && CPy>0   %1象限
+                if F>=0
+                    F=F-2*steplen*CPy+steplen^2;
+                    plot([X,X],[Y,Y-dy],'b','linewidth',1)
+                    Y=Y-dy;
+                    f=helpdlg("继续插补","NEXT");
+                    waitfor(f);
+                else
+                    F=F+2*steplen*CPx+steplen^2;
+                    plot([X,X+dx],[Y,Y],'b','linewidth',1)
+                    X=X+dx;
+                    f=helpdlg("继续插补","NEXT");
+                    waitfor(f);
+                end
+            end
+            CPx=X-CXr;
+            CPy=Y-CYr;
+        end
+    end
+end
 
+if ruinmode==0 %DDA法
+    PX1=CX0;
+    PY1=CY0;
+    PX2=CX0;
+    PY2=CY0;
+    CPx=CX0-CXr;
+    CPy=CY0-CYr;
+    CPX0=CX0-CXr;
+    CPY0=CY0-CYr;
+    CPXe=CXe-CXr;
+    CPYe=CYe-CYr;
+    dx=steplen;
+    dy=steplen;
+    xflag=1;    %Jrx累加开关
+    yflag=1;    %Jry累加开关
+    Jvx=abs(CPY0);   %y相对值
+    Jvy=abs(CPX0);   %x相对值
+    Jrx=0;
+    Jry=0;
+    OF=2^regbit;
+    Cinf=0;
+    CEx = [0 0 0 0];
+    CEy = [0 0 0 0];
+    if CR/steplen>OF
+        warndlg("寄存器位数错误无法完成差补")
+        return;
+    end
+    if loadmode==1
+        Jrx=OF/2;
+        Jry=OF/2;
+    end
+    if loadmode==2
+        Jrx=OF-1;
+        Jry=OF-1;
+    end
+    if leftmode==1
+        while Jvx<OF/4&&Jvy<OF/4
+            Jvx=Jvx*2;
+            Jvy=Jvy*2;
+            dx=dx*2;
+            dy=dy*2;
+        end
+    end
+    %插补准备判断象限计算步数
+    if clockwise==0   %逆圆弧
+        if CPX0>0 && CPY0>=0       %逆圆弧1象限
+            Cinf=110;
+        elseif CPX0<=0 && CPY0>0   %逆圆弧2象限
+            Cinf=120;
+        elseif CPX0<0 && CPY0<=0   %逆圆弧3象限
+            Cinf=130;
+        elseif CPX0>=0 && CPY0<0   %逆圆弧4象限
+            Cinf=140;
+        end
+    else             %顺圆弧
+        if CPX0>0 && CPY0<=0       %顺圆弧4象限
+            Cinf=240;
+        elseif CPX0<=0 && CPY0<0   %顺圆弧3象限
+            Cinf=230;
+        elseif CPX0<0 && CPY0>=0   %顺圆弧2象限
+            Cinf=220;
+        elseif CPX0>=0 && CPY0>0   %顺圆弧1象限
+            Cinf=210;
+        end
+    end
+
+    %终点坐标判别
+    if clockwise==0   %逆圆弧
+        if CPXe>=0 && CPYe>0       %1象限
+            Cinf=Cinf+1;
+        elseif CPXe<0 && CPYe>=0   %2象限
+            Cinf=Cinf+2;
+        elseif CPXe<=0 && CPYe<0   %3象限
+            Cinf=Cinf+3;
+        elseif CPXe>0 && CPYe<=0   %4象限
+            Cinf=Cinf+4;
+        end
+    else
+        if CPXe>0 && CPYe>=0       %1象限
+            Cinf=Cinf+1;
+        elseif CPXe<=0 && CPYe>0   %2象限
+            Cinf=Cinf+2;
+        elseif CPXe<0 && CPYe<=0   %3象限
+            Cinf=Cinf+3;
+        elseif CPXe>=0 && CPYe<0   %4象限
+            Cinf=Cinf+4;
+        end
+    end
+    
+    switch Cinf
+        case 111    %逆圆弧1-->1
+            CEx(1)=ceil(abs(CX0-CXe)/steplen);CEx(2)=0;CEx(3)=0;CEx(4)=0;
+            CEy(1)=ceil(abs(CY0-CYe)/steplen);CEy(2)=0;CEy(3)=0;CEy(4)=0;
+        case 122
+            CEx(1)=0;CEx(2)=ceil(abs(CX0-CXe)/steplen);CEx(3)=0;CEx(4)=0;
+            CEy(1)=0;CEy(2)=ceil(abs(CY0-CYe)/steplen);CEy(3)=0;CEy(4)=0;
+        case 133
+            CEx(1)=0;CEx(2)=0;CEx(3)=ceil(abs(CX0-CXe)/steplen);CEx(4)=0;
+            CEy(1)=0;CEy(2)=0;CEy(3)=ceil(abs(CY0-CYe)/steplen);CEy(4)=0;
+        case 144
+            CEx(1)=0;CEx(2)=0;CEx(3)=0;CEx(4)=ceil(abs(CX0-CXe)/steplen);
+            CEy(1)=0;CEy(2)=0;CEy(3)=0;CEy(4)=ceil(abs(CY0-CYe)/steplen);
+        case 112
+            CEx(1)=ceil(abs(CPX0)/steplen);CEx(2)=ceil(abs(CPXe)/steplen);CEx(3)=0;CEx(4)=0;
+            CEy(1)=ceil(abs(abs(CPY0)-CR)/steplen);CEy(2)=ceil(abs(abs(CPYe)-CR)/steplen);CEy(3)=0;CEy(4)=0;
+        case 123
+            CEx(1)=0;CEx(2)=ceil(abs(abs(CPX0)-CR)/steplen);CEx(3)=ceil(abs(abs(CPXe)-CR)/steplen);CEx(4)=0;
+            CEy(1)=0;CEy(2)=ceil(abs(CPY0)/steplen);CEy(3)=ceil(abs(CPYe)/steplen);CEy(4)=0;
+        case 134
+            CEx(1)=0;CEx(2)=0;CEx(3)=ceil(abs(CPX0)/steplen);CEx(4)=ceil(abs(CPXe)/steplen);
+            CEy(1)=0;CEy(2)=0;CEy(3)=ceil(abs(abs(CPY0)-CR)/steplen);CEy(4)=ceil(abs(abs(CPYe)-CR)/steplen);
+        case 141
+            CEx(1)=ceil(abs(abs(CPXe)-CR)/steplen);CEx(2)=0;CEx(3)=0;CEx(4)=ceil(abs(abs(CPX0)-CR)/steplen);
+            CEy(1)=ceil(abs(CPYe)/steplen);CEy(2)=0;CEy(3)=0;CEy(4)=ceil(abs(CPY0)/steplen);
+        case 113
+            CEx(1)=ceil(abs(CPX0)/steplen);CEx(2)=ceil(CR/steplen);CEx(3)=ceil(abs(abs(CPXe)-CR)/steplen);CEx(4)=0;
+            CEy(1)=ceil(abs(abs(CPY0)-CR)/steplen);CEy(2)=ceil(CR/steplen);CEy(3)=ceil(abs(CPYe)/steplen);CEy(4)=0;
+        case 124
+            CEx(1)=0;CEx(2)=ceil(abs(abs(CPX0)-CR)/steplen);CEx(3)=ceil(CR/steplen);CEx(4)=ceil(abs(CPXe)/steplen);
+            CEy(1)=0;CEy(2)=ceil(abs(CPY0)/steplen);CEy(3)=ceil(CR/steplen);CEy(4)=ceil(abs(abs(CPYe)-CR)/steplen);
+        case 131
+            CEx(1)=ceil(abs(abs(CPXe)-CR)/steplen);CEx(2)=0;CEx(3)=ceil(abs(CPX0)/steplen);CEx(4)=ceil(CR/steplen);
+            CEy(1)=ceil(abs(CPYe)/steplen);CEy(2)=0;CEy(3)=ceil(abs(abs(CPY0)-CR)/steplen);CEy(4)=ceil(CR/steplen);
+        case 142
+            CEx(1)=ceil(CR/steplen);CEx(2)=ceil(abs(CPXe)/steplen);CEx(3)=0;CEx(4)=ceil(abs(abs(CPX0)-CR)/steplen);
+            CEy(1)=ceil(CR/steplen);CEy(2)=ceil(abs(abs(CPYe)-CR)/steplen);CEy(3)=0;CEy(4)=ceil(abs(CPY0)/steplen);
+        case 114
+            CEx(1)=ceil(abs(CPX0)/steplen);CEx(2)=ceil(CR/steplen);CEx(3)=ceil(CR/steplen);CEx(4)=ceil(abs(CPXe)/steplen);
+            CEy(1)=ceil(abs(abs(CPY0)-CR)/steplen);CEy(2)=ceil(CR/steplen);CEy(3)=ceil(CR/steplen);CEy(4)=ceil(abs(abs(CPYe)-CR)/steplen);
+        case 121
+            CEx(1)=ceil(abs(abs(CPXe)-CR)/steplen);CEx(2)=ceil(abs(abs(CPX0)-CR)/steplen);CEx(3)=ceil(CR/steplen);CEx(4)=ceil(CR/steplen);
+            CEy(1)=ceil(abs(CPYe)/steplen);CEy(2)=ceil(abs(CPY0)/steplen);CEy(3)=ceil(CR/steplen);CEy(4)=ceil(CR/steplen);
+        case 132
+            CEx(1)=ceil(CR/steplen);CEx(2)=ceil(abs(CPXe)/steplen);CEx(3)=ceil(abs(CPX0)/steplen);CEx(4)=ceil(CR/steplen);
+            CEy(1)=ceil(CR/steplen);CEy(2)=ceil(abs(abs(CPYe)-CR)/steplen);CEy(3)=ceil(abs(abs(CPY0)-CR)/steplen);CEy(4)=ceil(CR/steplen);
+        case 143    
+            CEx(1)=ceil(CR/steplen);CEx(2)=ceil(CR/steplen);CEx(3)=ceil(abs(abs(CPXe)-CR)/steplen);CEx(4)=ceil(abs(abs(CPX0)-CR)/steplen);
+            CEy(1)=ceil(CR/steplen);CEy(2)=ceil(CR/steplen);CEy(3)=ceil(abs(CPYe)/steplen);CEy(4)=ceil(abs(CPY0)/steplen);
+        %----------------------顺圆弧--------------------------------
+        case 211    %顺圆弧1-->1
+            CEx(1)=ceil(abs(CX0-CXe)/steplen);CEx(2)=0;CEx(3)=0;CEx(4)=0;
+            CEy(1)=ceil(abs(CY0-CYe)/steplen);CEy(2)=0;CEy(3)=0;CEy(4)=0;
+        case 222
+            CEx(1)=0;CEx(2)=ceil(abs(CX0-CXe)/steplen);CEx(3)=0;CEx(4)=0;
+            CEy(1)=0;CEy(2)=ceil(abs(CY0-CYe)/steplen);CEy(3)=0;CEy(4)=0;
+        case 233
+            CEx(1)=0;CEx(2)=0;CEx(3)=ceil(abs(CX0-CXe)/steplen);CEx(4)=0;
+            CEy(1)=0;CEy(2)=0;CEy(3)=ceil(abs(CY0-CYe)/steplen);CEy(4)=0;
+        case 244
+            CEx(1)=0;CEx(2)=0;CEx(3)=0;CEx(4)=ceil(abs(CX0-CXe)/steplen);
+            CEy(1)=0;CEy(2)=0;CEy(3)=0;CEy(4)=ceil(abs(CY0-CYe)/steplen);
+        case 214        %1-4
+            CEx(1)=ceil(abs(abs(CPX0)-CR)/steplen);CEx(2)=0;CEx(3)=0;CEx(4)=ceil(abs(abs(CPXe)-CR)/steplen);
+            CEy(1)=ceil(abs(CPY0)/steplen);CEy(2)=0;CEy(3)=0;CEy(4)=ceil(abs(CPYe)/steplen);
+        case 243
+            CEx(1)=0;CEx(2)=0;CEx(3)=ceil(abs(CPXe)/steplen);CEx(4)=ceil(abs(CPX0)/steplen);
+            CEy(1)=0;CEy(2)=0;CEy(3)=ceil(abs(CPYe)/steplen);CEy(4)=ceil(abs(abs(CPY0)-CR)/steplen);
+        case 232
+            CEx(1)=0;CEx(2)=ceil(bas(abs(CPXe)-CR)/steplen);CEx(3)=ceil(abs(abs(CPX0)-CR)/steplen);CEx(4)=0;
+            CEy(1)=0;CEy(2)=ceil(abs(CPYe)/steplen);CEy(3)=ceil(abs(CPY0)/steplen);CEy(4)=0;
+        case 221
+            CEx(1)=ceil(abs(CPXe)/steplen);CEx(2)=ceil(abs(CPX0)/steplen);CEx(3)=0;CEx(4)=0;
+            CEy(1)=ceil(abs(abs(CPYe)-CR)/steplen);CEy(2)=ceil(abs(abs(CPY0)-CR)/steplen);CEy(3)=0;CEy(4)=0;
+        case 213        %1-4-3
+            CEx(1)=ceil(abs(abs(CPX0)-CR)/steplen);CEx(2)=0;CEx(3)=ceil(abs(CPXe)/steplen);CEx(4)=ceil(CR/steplen);
+            CEy(1)=ceil(abs(CPY0)/steplen);CEy(2)=0;CEy(3)=ceil(abs(abs(CPYe)-CR)/steplen);CEy(4)=ceil(CR/steplen);
+        case 224        %2-1-4
+            CEx(1)=ceil(CR/steplen);CEx(2)=ceil(abs(CPX0)/steplen);CEx(3)=0;CEx(4)=ceil(abs(abs(CPXe)-CR)/steplen);
+            CEy(1)=ceil(CR/steplen);CEy(2)=ceil(abs(abs(CPY0)-CR)/steplen);CEy(3)=0;CEy(4)=ceil(abs(CPYe)/steplen);
+        case 231        %3-2-1
+            CEx(1)=ceil(abs(CPXe)/steplen);CEx(2)=ceil(CR/steplen);CEx(3)=ceil(abs(abs(CPX0)-CR)/steplen);CEx(4)=0;
+            CEy(1)=ceil(abs(abs(CPYe)-CR)/steplen);CEy(2)=ceil(CR/steplen);CEy(3)=ceil(abs(CPY0)/steplen);CEy(4)=0;
+        case 242        %4-3-2
+            CEx(1)=0;CEx(2)=ceil(abs(abs(CPXe)-CR)/steplen);CEx(3)=ceil(CR/steplen);CEx(4)=ceil(abs(CPX0)/steplen);
+            CEy(1)=0;CEy(2)=ceil(abs(CPYe)/steplen);CEy(3)=ceil(CR/steplen);CEy(4)=ceil(abs(abs(CPY0)-CR)/steplen);
+        case 212        %1-4-3-2
+            CEx(1)=ceil(abs(abs(CPX0)-CR)/steplen);CEx(2)=ceil(abs(abs(CPXe)-CR)/steplen);CEx(3)=ceil(CR/steplen);CEx(4)=ceil(CR/steplen);
+            CEy(1)=ceil(abs(CPY0)/steplen);CEy(2)=ceil(abs(CPYe)/steplen);CEy(3)=ceil(CR/steplen);CEy(4)=ceil(CR/steplen);
+        case 223        %2-1-4-3
+            CEx(1)=ceil(CR/steplen);CEx(2)=ceil(abs(CPX0)/steplen);CEx(3)=ceil(abs(CPXe)/steplen);CEx(4)=ceil(CR/steplen);
+            CEy(1)=ceil(CR/steplen);CEy(2)=ceil(abs(abs(CPY0)-CR)/steplen);CEy(3)=ceil(abs(abs(CPYe)-CR)/steplen);CEy(4)=ceil(CR/steplen);
+        case 234        %3-2-1-4
+            CEx(1)=ceil(CR/steplen);CEx(2)=ceil(CR/steplen);CEx(3)=ceil(abs(abs(CPX0)-CR)/steplen);CEx(4)=ceil(abs(abs(CPXe)-CR)/steplen);
+            CEy(1)=ceil(CR/steplen);CEy(2)=ceil(CR/steplen);CEy(3)=ceil(abs(CPY0)/steplen);CEy(4)=ceil(abs(CPYe)/steplen);
+        case 241        %4-3-2-1
+            CEx(1)=ceil(abs(CPXe)/steplen);CEx(2)=ceil(CR/steplen);CEx(3)=ceil(CR/steplen);CEx(4)=ceil(abs(CPX0)/steplen);
+            CEy(1)=ceil(abs(abs(CPYe)-CR)/steplen);CEy(2)=ceil(CR/steplen);CEy(3)=ceil(CR/steplen);CEy(4)=ceil(abs(abs(CPYe)-CR)/steplen);
+        otherwise
+    end
+    fprintf("Cinf: %d\r\n", Cinf);
+    disp("CEx");
+    disp(CEx);
+    disp("CEy");
+    disp(CEy);
+    if clockwise==0   %逆圆弧
+        while CEx(1)>0 || CEx(2)>0 || CEx(3)>0 || CEx(4)>0 || CEy(1)>0 || CEy(2)>0 || CEy(3)>0 || CEy(4)>0
+            if xflag
+                Jrx=Jrx+Jvx;
+            end
+            if yflag
+                Jry=Jry+Jvy;
+            end
+            if CPx>0 && CPy>=0   %1象限
+                if Jrx>=OF     %x溢出
+                    Jrx=Jrx-OF;
+                    PX2=PX1-steplen;
+                    Jvy=Jvy-dx; 
+                    if CEx(1)>1 
+                        CEx(1)=CEx(1)-1;
+                    else      
+                        CEx(1)=CEx(1)-1;
+                        xflag=0;
+                    end
+                end
+                if Jry>=OF    %y溢出
+                    Jry=Jry-OF;
+                    PY2=PY1+steplen;
+                    Jvx=Jvx+dy;  
+                    if CEy(1)>1 
+                        CEy(1)=CEy(1)-1;
+                    else  
+                        CEy(1)=CEy(1)-1;
+                        yflag=0;
+                    end
+                end
+                if PX2-CXr==0 && CEy(1)>0
+                    CEy(2)=CEy(2)-CEy(1);
+                    CEy(1)=0;
+                end
+                if CEx(1)<=0 && CEy(1)<=0
+                    xflag=1;
+                    yflag=1;
+                    Jrx=0;
+                    Jry=0;
+                end
+            elseif CPx<=0 && CPy>0 %2象限
+                if Jrx>=OF     %x溢出
+                    Jrx=Jrx-OF;
+                    PX2=PX1-steplen;
+                    Jvy=Jvy+dx; 
+                    if CEx(2)>1 
+                        CEx(2)=CEx(2)-1;
+                    else      
+                        CEx(2)=CEx(2)-1;
+                        Jrx=0;
+                        xflag=0;
+                    end
+                end
+                if Jry>=OF    %y溢出
+                    Jry=Jry-OF;
+                    PY2=PY1-steplen;
+                    Jvx=Jvx-dy;  
+                    if CEy(2)>1 
+                        CEy(2)=CEy(2)-1;
+                    else  
+                        CEy(2)=CEy(2)-1;
+                        Jry=0;
+                        yflag=0;
+                    end
+                end
+                if PY2-CYr==0 && CEx(2)>0
+                    CEx(3)=CEx(3)-CEx(2);
+                    CEx(2)=0;
+                end
+                if CEx(2)<=0 && CEy(2)<=0
+                    xflag=1;
+                    yflag=1;
+                    Jrx=0;
+                    Jry=0;
+                end
+            elseif CPx<0 && CPy<=0 %3象限
+                if Jrx>=OF     %x溢出
+                    Jrx=Jrx-OF;
+                    PX2=PX1+steplen;
+                    Jvy=Jvy-dx; 
+                    if CEx(3)>1 
+                        CEx(3)=CEx(3)-1;
+                    else      
+                        CEx(3)=CEx(3)-1;
+                        xflag=0;
+                    end
+                end
+                if Jry>=OF    %y溢出
+                    Jry=Jry-OF;
+                    PY2=PY1-steplen;
+                    Jvx=Jvx+dy;  
+                    if CEy(3)>1 
+                        CEy(3)=CEy(3)-1;
+                    else  
+                        CEy(3)=CEy(3)-1;
+                        yflag=0;
+                    end
+                end
+
+                if PX2-CXr==0 && CEy(3)>0
+                    CEy(4)=CEy(4)-CEy(3);
+                    CEy(3)=0;
+                end                
+                if CEx(3)<=0 && CEy(3)<=0
+                    CEy(3)=0;
+                    xflag=1;
+                    yflag=1;
+                    Jrx=0;
+                    Jry=0;
+                end
+                
+            elseif CPx>=0 && CPy<0 %4象限
+                if Jrx>=OF     %x溢出
+                    Jrx=Jrx-OF;
+                    PX2=PX1+steplen;
+                    Jvy=Jvy+dx; 
+                    if CEx(4)>1 
+                        CEx(4)=CEx(4)-1;
+                    else      
+                        CEx(4)=CEx(4)-1;
+                        xflag=0;
+                    end
+                end
+                if Jry>=OF    %y溢出
+                    Jry=Jry-OF;
+                    PY2=PY1+steplen;
+                    Jvx=Jvx-dy;  
+                    if CEy(4)>1 
+                        CEy(4)=CEy(4)-1;
+                    else  
+                        CEy(4)=CEy(4)-1;
+                        yflag=0;
+                    end
+                end
+
+                if PY2-CYr==0 && CEx(4)>0
+                    CEx(1)=CEx(1)-CEx(4);
+                    CEx(4)=0;
+                end
+                if CEx(4)<=0 && CEy(4)<=0
+                    CEy(4)=0;
+                    xflag=1;
+                    yflag=1;
+                    Jrx=0;
+                    Jry=0;
+                end 
+            end
+            if(PX1 == PX2 && PY1 == PY2)
+            else
+                plot([PX1,PX2],[PY1,PY2],'b','linewidth',1);
+                f=helpdlg("继续插补","NEXT");
+                waitfor(f);
+            end
+            PX1 = PX2;
+            PY1 = PY2;
+            CPx=PX1-CXr;
+            CPy=PY1-CYr;
+        end
+    else   %顺圆弧
+        while CEx(1)>0 || CEx(2)>0 || CEx(3)>0 || CEx(4)>0 || CEy(1)>0 || CEy(2)>0 || CEy(3)>0 || CEy(4)>0
+            if xflag
+                Jrx=Jrx+Jvx;
+            end
+            if yflag
+                Jry=Jry+Jvy;
+            end
+            if CPx>=0 && CPy>0   %1象限
+                if Jrx>=OF     %x溢出
+                    Jrx=Jrx-OF;
+                    PX2=PX1+steplen;
+                    Jvy=Jvy+dx; 
+                    if CEx(1)>1 
+                        CEx(1)=CEx(1)-1;
+                    else      
+                        CEx(1)=CEx(1)-1;
+                        xflag=0;
+                    end
+                end
+                if Jry>=OF    %y溢出
+                    Jry=Jry-OF;
+                    PY2=PY1-steplen;
+                    Jvx=Jvx-dy;  
+                    if CEy(1)>1 
+                        CEy(1)=CEy(1)-1;
+                    else  
+                        CEy(1)=CEy(1)-1;
+                        yflag=0;
+                    end
+                end
+
+                if PY2-CYr==0 && CEx(1)>0
+                    CEx(4)=CEx(4)-CEx(1);
+                    CEx(1)=0;
+                end
+                if CEx(1)<=0 && CEy(1)<=0
+                    xflag=1;
+                    yflag=1;
+                    Jrx=0;
+                    Jry=0;
+                end
+            elseif CPx<0 && CPy>=0 %2象限
+                if Jrx>=OF     %x溢出
+                    Jrx=Jrx-OF;
+                    PX2=PX1+steplen;
+                    Jvy=Jvy-dx; 
+                    if CEx(2)>1 
+                        CEx(2)=CEx(2)-1;
+                    else      
+                        CEx(2)=CEx(2)-1;
+                        Jrx=0;
+                        xflag=0;
+                    end
+                end
+                if Jry>=OF    %y溢出
+                    Jry=Jry-OF;
+                    PY2=PY1+steplen;
+                    Jvx=Jvx+dy;  
+                    if CEy(2)>1 
+                        CEy(2)=CEy(2)-1;
+                    else  
+                        CEy(2)=CEy(2)-1;
+                        Jry=0;
+                        yflag=0;
+                    end
+                end
+
+                if PX2-CXr==0 && CEy(2)>0
+                    CEy(1)=CEy(1)-CEy(2);
+                    CEy(2)=0;
+                end
+                if CEx(2)<=0 && CEy(2)<=0
+                    xflag=1;
+                    yflag=1;
+                    Jrx=0;
+                    Jry=0;
+                end
+            elseif CPx<=0 && CPy<0 %3象限
+                if Jrx>=OF     %x溢出
+                    Jrx=Jrx-OF;
+                    PX2=PX1-steplen;
+                    Jvy=Jvy+dx; 
+                    if CEx(3)>1 
+                        CEx(3)=CEx(3)-1;
+                    else      
+                        CEx(3)=CEx(3)-1;
+                        xflag=0;
+                    end
+                end
+                if Jry>=OF    %y溢出
+                    Jry=Jry-OF;
+                    PY2=PY1+steplen;
+                    Jvx=Jvx-dy;  
+                    if CEy(3)>1 
+                        CEy(3)=CEy(3)-1;
+                    else  
+                        CEy(3)=CEy(3)-1;
+                        yflag=0;
+                    end
+                end
+
+                if PY2-CYr==0 && CEx(3)>0
+                    CEx(2)=CEx(2)-CEx(3);
+                    CEx(3)=0;
+                end
+                if CEx(3)<=0 && CEy(3)<=0
+                    CEy(3)=0;
+                    xflag=1;
+                    yflag=1;
+                    Jrx=0;
+                    Jry=0;
+                end
+            elseif CPx>0 && CPy<=0 %4象限
+                if Jrx>=OF     %x溢出
+                    Jrx=Jrx-OF;
+                    PX2=PX1-steplen;
+                    Jvy=Jvy-dx; 
+                    if CEx(4)>1 
+                        CEx(4)=CEx(4)-1;
+                    else      
+                        CEx(4)=CEx(4)-1;
+                        xflag=0;
+                    end
+                end
+                if Jry>=OF    %y溢出
+                    Jry=Jry-OF;
+                    PY2=PY1-steplen;
+                    Jvx=Jvx+dy;  
+                    if CEy(4)>1 
+                        CEy(4)=CEy(4)-1;
+                    else  
+                        CEy(4)=CEy(4)-1;
+                        yflag=0;
+                    end
+                end
+                if PX2-CXr==0 && CEy(4)>0
+                    CEy(3)=CEy(3)-CEy(4);
+                    CEy(4)=0;
+                end
+                if CEx(4)<=0 && CEy(4)<=0
+                    CEy(4)=0;
+                    xflag=1;
+                    yflag=1;
+                    Jrx=0;
+                    Jry=0;
+                end
+            end
+            if(PX1 == PX2 && PY1 == PY2)
+                else
+                    plot([PX1,PX2],[PY1,PY2],'b','linewidth',1);
+                    f=helpdlg("继续插补","NEXT");
+                    waitfor(f);
+            end
+            PX1 = PX2;
+            PY1 = PY2;
+            CPx=PX1-CXr;
+            CPy=PY1-CYr;
+        end
+    end
+end
 
 % --- Executes on button press in contcircle.
 function contcircle_Callback(hObject, eventdata, handles)
 % hObject    handle to contcircle (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global CX0 CY0 CXr CYr CXe CYe steplen clockwise speed;
-X=CX0;
-Y=CY0;
-CPx=X-CXr;
-CPy=Y-CYr;
+global CX0 CY0 CXr CYr CXe CYe steplen clockwise speed ruinmode regbit CR loadmode leftmode;
+X=CX0;              %逐点法当前X坐标
+Y=CY0;              %逐点法当前Y坐标
+CPx=X-CXr;          %逐点法当前相对X坐标
+CPy=Y-CYr;          %逐点法当前相对X坐标
 dx=steplen;
 dy=steplen;
-F=0;
-if clockwise==0   %逆圆弧
-    while (sqrt((X-CXe)^2+(Y-CYe)^2))>=steplen
-        if CPx>0 && CPy>=0   %1象限
-            if F>=0
-                F=F-2*steplen*CPx+steplen^2;
-                plot([X,X-dx],[Y,Y],'b','linewidth',1)
-                X=X-dx;
-                pause(1/speed);
-            else
-                F=F+2*steplen*CPy+steplen^2;
-                plot([X,X],[Y,Y+dy],'b','linewidth',1)
-                Y=Y+dy;
-                pause(1/speed);
+F=0;                %逐点法判别式F
+cnt = 0;            %插补整圆
+
+if ruinmode==1 %逐点法
+    if clockwise==0   %逆圆弧
+        while (sqrt((X-CXe)^2+(Y-CYe)^2))>=steplen || cnt==0
+            cnt = 1;
+            if CPx>0 && CPy>=0   %1象限
+                if F>=0
+                    F=F-2*steplen*CPx+steplen^2;
+                    plot([X,X-dx],[Y,Y],'b','linewidth',1)
+                    X=X-dx;
+                    pause(1/speed);
+                else
+                    F=F+2*steplen*CPy+steplen^2;
+                    plot([X,X],[Y,Y+dy],'b','linewidth',1)
+                    Y=Y+dy;
+                    pause(1/speed);
+                end
             end
-        end
-        if CPx<=0 && CPy>0   %2象限
-            if F>=0
-                F=F-2*steplen*CPy+steplen^2;
-                plot([X,X],[Y,Y-dy],'b','linewidth',1)
-                Y=Y-dy;
-                pause(1/speed);
-            else
-                F=F-2*steplen*CPx+steplen^2;
-                plot([X,X-dx],[Y,Y],'b','linewidth',1)
-                X=X-dx;
-                pause(1/speed);
+            if CPx<=0 && CPy>0   %2象限
+                if F>=0
+                    F=F-2*steplen*CPy+steplen^2;
+                    plot([X,X],[Y,Y-dy],'b','linewidth',1)
+                    Y=Y-dy;
+                    pause(1/speed);
+                else
+                    F=F-2*steplen*CPx+steplen^2;
+                    plot([X,X-dx],[Y,Y],'b','linewidth',1)
+                    X=X-dx;
+                    pause(1/speed);
+                end
             end
-        end
-        if CPx<0 && CPy<=0   %3象限
-            if F>=0
-                F=F+2*steplen*CPx+steplen^2;
-                plot([X,X+dx],[Y,Y],'b','linewidth',1)
-                X=X+dx;
-                pause(1/speed);
-            else
-                F=F-2*CPy*steplen+steplen^2;
-                plot([X,X],[Y,Y-dy],'b','linewidth',1)
-                Y=Y-dy;
-                pause(1/speed);
+            if CPx<0 && CPy<=0   %3象限
+                if F>=0
+                    F=F+2*steplen*CPx+steplen^2;
+                    plot([X,X+dx],[Y,Y],'b','linewidth',1)
+                    X=X+dx;
+                    pause(1/speed);
+                else
+                    F=F-2*CPy*steplen+steplen^2;
+                    plot([X,X],[Y,Y-dy],'b','linewidth',1)
+                    Y=Y-dy;
+                    pause(1/speed);
+                end
             end
-        end
-        if CPx>=0 && CPy<0                   %4象限
-            if F>=0
-                F=F+2*steplen*CPy+steplen^2;
-                plot([X,X],[Y,Y+dy],'b','linewidth',1)
-                Y=Y+dy;
-                pause(1/speed);
-            else
-                F=F+2*steplen*CPx+steplen^2;
-                plot([X,X+dx],[Y,Y],'b','linewidth',1)
-                X=X+dx;
-                pause(1/speed);
+            if CPx>=0 && CPy<0                   %4象限
+                if F>=0
+                    F=F+2*steplen*CPy+steplen^2;
+                    plot([X,X],[Y,Y+dy],'b','linewidth',1)
+                    Y=Y+dy;
+                    pause(1/speed);
+                else
+                    F=F+2*steplen*CPx+steplen^2;
+                    plot([X,X+dx],[Y,Y],'b','linewidth',1)
+                    X=X+dx;
+                    pause(1/speed);
+                end
             end
+            CPx=X-CXr;
+            CPy=Y-CYr;
         end
-        CPx=X-CXr;
-        CPy=Y-CYr;
+    else  
+        while (sqrt((X-CXe)^2+(Y-CYe)^2))>=steplen || cnt == 0
+            cnt = 1;
+            if CPx>0 && CPy<=0   %4象限
+                if F>=0
+                    F=F-2*steplen*CPx+steplen^2;
+                    plot([X,X-dx],[Y,Y],'b','linewidth',1)
+                    X=X-dx;
+                    pause(1/speed);
+                else
+                    F=F-2*steplen*CPy+steplen^2;
+                    plot([X,X],[Y,Y-dy],'b','linewidth',1)
+                    Y=Y-dy;
+                    pause(1/speed);
+                end
+            end
+            if CPx<=0 && CPy<0   %3象限
+                if F>=0
+                    F=F+2*steplen*CPy+steplen^2;
+                    plot([X,X],[Y,Y+dy],'b','linewidth',1)
+                    Y=Y+dy;
+                    pause(1/speed);
+                else
+                    F=F-2*steplen*CPx+steplen^2;
+                    plot([X,X-dx],[Y,Y],'b','linewidth',1)
+                    X=X-dx;
+                    pause(1/speed);
+                end
+            end
+            if CPx<0 && CPy>=0   %2象限
+                if F>=0
+                    F=F+2*steplen*CPx+steplen^2;
+                    plot([X,X+dx],[Y,Y],'b','linewidth',1)
+                    X=X+dx;
+                    pause(1/speed);
+                else
+                    F=F+2*steplen*CPy+steplen^2;
+                    plot([X,X],[Y,Y+dy],'b','linewidth',1)
+                    Y=Y+dy;
+                    pause(1/speed);
+                end
+            end
+            if CPx>=0 && CPy>0   %1象限
+                if F>=0
+                    F=F-2*steplen*CPy+steplen^2;
+                    plot([X,X],[Y,Y-dy],'b','linewidth',1)
+                    Y=Y-dy;
+                    pause(1/speed);
+                else
+                    F=F+2*steplen*CPx+steplen^2;
+                    plot([X,X+dx],[Y,Y],'b','linewidth',1)
+                    X=X+dx;
+                    pause(1/speed);
+                end
+            end
+            CPx=X-CXr;
+            CPy=Y-CYr;
+        end
     end
-else
-    while (sqrt((X-CXe)^2+(Y-CYe)^2))>=steplen
-        if CPx>0 && CPy<=0   %4象限
-            if F>=0
-                F=F-2*steplen*CPx+steplen^2;
-                plot([X,X-dx],[Y,Y],'b','linewidth',1)
-                X=X-dx;
-                pause(1/speed);
+end
+if ruinmode==0 %DDA法
+    PX1=CX0;
+    PY1=CY0;
+    PX2=CX0;
+    PY2=CY0;
+    CPx=CX0-CXr;
+    CPy=CY0-CYr;
+    CPX0=CX0-CXr;
+    CPY0=CY0-CYr;
+    CPXe=CXe-CXr;
+    CPYe=CYe-CYr;
+    dx=steplen;
+    dy=steplen;
+    xflag=1;    %Jrx累加开关
+    yflag=1;    %Jry累加开关
+    Jvx=abs(CPY0);   %y相对值
+    Jvy=abs(CPX0);   %x相对值
+    Jrx=0;
+    Jry=0;
+    OF=2^regbit;
+    Cinf=0;
+    CEx = [0 0 0 0];
+    CEy = [0 0 0 0];
+    if CR/steplen>OF
+        warndlg("寄存器位数错误无法完成差补")
+        return;
+    end
+    if loadmode==1
+        Jrx=OF/2;
+        Jry=OF/2;
+    end
+    if loadmode==2
+        Jrx=OF-1;
+        Jry=OF-1;
+    end
+    if leftmode==1
+        while Jvx<OF/4&&Jvy<OF/4
+            Jvx=Jvx*2;
+            Jvy=Jvy*2;
+            dx=dx*2;
+            dy=dy*2;
+        end
+    end
+    %插补准备判断象限计算步数
+    if clockwise==0   %逆圆弧
+        if CPX0>0 && CPY0>=0       %逆圆弧1象限
+            Cinf=110;
+        elseif CPX0<=0 && CPY0>0   %逆圆弧2象限
+            Cinf=120;
+        elseif CPX0<0 && CPY0<=0   %逆圆弧3象限
+            Cinf=130;
+        elseif CPX0>=0 && CPY0<0   %逆圆弧4象限
+            Cinf=140;
+        end
+    else             %顺圆弧
+        if CPX0>0 && CPY0<=0       %顺圆弧4象限
+            Cinf=240;
+        elseif CPX0<=0 && CPY0<0   %顺圆弧3象限
+            Cinf=230;
+        elseif CPX0<0 && CPY0>=0   %顺圆弧2象限
+            Cinf=220;
+        elseif CPX0>=0 && CPY0>0   %顺圆弧1象限
+            Cinf=210;
+        end
+    end
+
+    %终点坐标判别
+    if clockwise==0   %逆圆弧
+        if CPXe>=0 && CPYe>0       %1象限
+            Cinf=Cinf+1;
+        elseif CPXe<0 && CPYe>=0   %2象限
+            Cinf=Cinf+2;
+        elseif CPXe<=0 && CPYe<0   %3象限
+            Cinf=Cinf+3;
+        elseif CPXe>0 && CPYe<=0   %4象限
+            Cinf=Cinf+4;
+        end
+    else
+        if CPXe>0 && CPYe>=0       %1象限
+            Cinf=Cinf+1;
+        elseif CPXe<=0 && CPYe>0   %2象限
+            Cinf=Cinf+2;
+        elseif CPXe<0 && CPYe<=0   %3象限
+            Cinf=Cinf+3;
+        elseif CPXe>=0 && CPYe<0   %4象限
+            Cinf=Cinf+4;
+        end
+    end
+    
+    switch Cinf
+        case 111    %逆圆弧1-->1
+            CEx(1)=ceil(abs(CX0-CXe)/steplen);CEx(2)=0;CEx(3)=0;CEx(4)=0;
+            CEy(1)=ceil(abs(CY0-CYe)/steplen);CEy(2)=0;CEy(3)=0;CEy(4)=0;
+        case 122
+            CEx(1)=0;CEx(2)=ceil(abs(CX0-CXe)/steplen);CEx(3)=0;CEx(4)=0;
+            CEy(1)=0;CEy(2)=ceil(abs(CY0-CYe)/steplen);CEy(3)=0;CEy(4)=0;
+        case 133
+            CEx(1)=0;CEx(2)=0;CEx(3)=ceil(abs(CX0-CXe)/steplen);CEx(4)=0;
+            CEy(1)=0;CEy(2)=0;CEy(3)=ceil(abs(CY0-CYe)/steplen);CEy(4)=0;
+        case 144
+            CEx(1)=0;CEx(2)=0;CEx(3)=0;CEx(4)=ceil(abs(CX0-CXe)/steplen);
+            CEy(1)=0;CEy(2)=0;CEy(3)=0;CEy(4)=ceil(abs(CY0-CYe)/steplen);
+        case 112
+            CEx(1)=ceil(abs(CPX0)/steplen);CEx(2)=ceil(abs(CPXe)/steplen);CEx(3)=0;CEx(4)=0;
+            CEy(1)=ceil(abs(abs(CPY0)-CR)/steplen);CEy(2)=ceil(abs(abs(CPYe)-CR)/steplen);CEy(3)=0;CEy(4)=0;
+        case 123
+            CEx(1)=0;CEx(2)=ceil(abs(abs(CPX0)-CR)/steplen);CEx(3)=ceil(abs(abs(CPXe)-CR)/steplen);CEx(4)=0;
+            CEy(1)=0;CEy(2)=ceil(abs(CPY0)/steplen);CEy(3)=ceil(abs(CPYe)/steplen);CEy(4)=0;
+        case 134
+            CEx(1)=0;CEx(2)=0;CEx(3)=ceil(abs(CPX0)/steplen);CEx(4)=ceil(abs(CPXe)/steplen);
+            CEy(1)=0;CEy(2)=0;CEy(3)=ceil(abs(abs(CPY0)-CR)/steplen);CEy(4)=ceil(abs(abs(CPYe)-CR)/steplen);
+        case 141
+            CEx(1)=ceil(abs(abs(CPXe)-CR)/steplen);CEx(2)=0;CEx(3)=0;CEx(4)=ceil(abs(abs(CPX0)-CR)/steplen);
+            CEy(1)=ceil(abs(CPYe)/steplen);CEy(2)=0;CEy(3)=0;CEy(4)=ceil(abs(CPY0)/steplen);
+        case 113
+            CEx(1)=ceil(abs(CPX0)/steplen);CEx(2)=ceil(CR/steplen);CEx(3)=ceil(abs(abs(CPXe)-CR)/steplen);CEx(4)=0;
+            CEy(1)=ceil(abs(abs(CPY0)-CR)/steplen);CEy(2)=ceil(CR/steplen);CEy(3)=ceil(abs(CPYe)/steplen);CEy(4)=0;
+        case 124
+            CEx(1)=0;CEx(2)=ceil(abs(abs(CPX0)-CR)/steplen);CEx(3)=ceil(CR/steplen);CEx(4)=ceil(abs(CPXe)/steplen);
+            CEy(1)=0;CEy(2)=ceil(abs(CPY0)/steplen);CEy(3)=ceil(CR/steplen);CEy(4)=ceil(abs(abs(CPYe)-CR)/steplen);
+        case 131
+            CEx(1)=ceil(abs(abs(CPXe)-CR)/steplen);CEx(2)=0;CEx(3)=ceil(abs(CPX0)/steplen);CEx(4)=ceil(CR/steplen);
+            CEy(1)=ceil(abs(CPYe)/steplen);CEy(2)=0;CEy(3)=ceil(abs(abs(CPY0)-CR)/steplen);CEy(4)=ceil(CR/steplen);
+        case 142
+            CEx(1)=ceil(CR/steplen);CEx(2)=ceil(abs(CPXe)/steplen);CEx(3)=0;CEx(4)=ceil(abs(abs(CPX0)-CR)/steplen);
+            CEy(1)=ceil(CR/steplen);CEy(2)=ceil(abs(abs(CPYe)-CR)/steplen);CEy(3)=0;CEy(4)=ceil(abs(CPY0)/steplen);
+        case 114
+            CEx(1)=ceil(abs(CPX0)/steplen);CEx(2)=ceil(CR/steplen);CEx(3)=ceil(CR/steplen);CEx(4)=ceil(abs(CPXe)/steplen);
+            CEy(1)=ceil(abs(abs(CPY0)-CR)/steplen);CEy(2)=ceil(CR/steplen);CEy(3)=ceil(CR/steplen);CEy(4)=ceil(abs(abs(CPYe)-CR)/steplen);
+        case 121
+            CEx(1)=ceil(abs(abs(CPXe)-CR)/steplen);CEx(2)=ceil(abs(abs(CPX0)-CR)/steplen);CEx(3)=ceil(CR/steplen);CEx(4)=ceil(CR/steplen);
+            CEy(1)=ceil(abs(CPYe)/steplen);CEy(2)=ceil(abs(CPY0)/steplen);CEy(3)=ceil(CR/steplen);CEy(4)=ceil(CR/steplen);
+        case 132
+            CEx(1)=ceil(CR/steplen);CEx(2)=ceil(abs(CPXe)/steplen);CEx(3)=ceil(abs(CPX0)/steplen);CEx(4)=ceil(CR/steplen);
+            CEy(1)=ceil(CR/steplen);CEy(2)=ceil(abs(abs(CPYe)-CR)/steplen);CEy(3)=ceil(abs(abs(CPY0)-CR)/steplen);CEy(4)=ceil(CR/steplen);
+        case 143    
+            CEx(1)=ceil(CR/steplen);CEx(2)=ceil(CR/steplen);CEx(3)=ceil(abs(abs(CPXe)-CR)/steplen);CEx(4)=ceil(abs(abs(CPX0)-CR)/steplen);
+            CEy(1)=ceil(CR/steplen);CEy(2)=ceil(CR/steplen);CEy(3)=ceil(abs(CPYe)/steplen);CEy(4)=ceil(abs(CPY0)/steplen);
+        %----------------------顺圆弧--------------------------------
+        case 211    %顺圆弧1-->1
+            CEx(1)=ceil(abs(CX0-CXe)/steplen);CEx(2)=0;CEx(3)=0;CEx(4)=0;
+            CEy(1)=ceil(abs(CY0-CYe)/steplen);CEy(2)=0;CEy(3)=0;CEy(4)=0;
+        case 222
+            CEx(1)=0;CEx(2)=ceil(abs(CX0-CXe)/steplen);CEx(3)=0;CEx(4)=0;
+            CEy(1)=0;CEy(2)=ceil(abs(CY0-CYe)/steplen);CEy(3)=0;CEy(4)=0;
+        case 233
+            CEx(1)=0;CEx(2)=0;CEx(3)=ceil(abs(CX0-CXe)/steplen);CEx(4)=0;
+            CEy(1)=0;CEy(2)=0;CEy(3)=ceil(abs(CY0-CYe)/steplen);CEy(4)=0;
+        case 244
+            CEx(1)=0;CEx(2)=0;CEx(3)=0;CEx(4)=ceil(abs(CX0-CXe)/steplen);
+            CEy(1)=0;CEy(2)=0;CEy(3)=0;CEy(4)=ceil(abs(CY0-CYe)/steplen);
+        case 214        %1-4
+            CEx(1)=ceil(abs(abs(CPX0)-CR)/steplen);CEx(2)=0;CEx(3)=0;CEx(4)=ceil(abs(abs(CPXe)-CR)/steplen);
+            CEy(1)=ceil(abs(CPY0)/steplen);CEy(2)=0;CEy(3)=0;CEy(4)=ceil(abs(CPYe)/steplen);
+        case 243
+            CEx(1)=0;CEx(2)=0;CEx(3)=ceil(abs(CPXe)/steplen);CEx(4)=ceil(abs(CPX0)/steplen);
+            CEy(1)=0;CEy(2)=0;CEy(3)=ceil(abs(CPYe)/steplen);CEy(4)=ceil(abs(abs(CPY0)-CR)/steplen);
+        case 232
+            CEx(1)=0;CEx(2)=ceil(bas(abs(CPXe)-CR)/steplen);CEx(3)=ceil(abs(abs(CPX0)-CR)/steplen);CEx(4)=0;
+            CEy(1)=0;CEy(2)=ceil(abs(CPYe)/steplen);CEy(3)=ceil(abs(CPY0)/steplen);CEy(4)=0;
+        case 221
+            CEx(1)=ceil(abs(CPXe)/steplen);CEx(2)=ceil(abs(CPX0)/steplen);CEx(3)=0;CEx(4)=0;
+            CEy(1)=ceil(abs(abs(CPYe)-CR)/steplen);CEy(2)=ceil(abs(abs(CPY0)-CR)/steplen);CEy(3)=0;CEy(4)=0;
+        case 213        %1-4-3
+            CEx(1)=ceil(abs(abs(CPX0)-CR)/steplen);CEx(2)=0;CEx(3)=ceil(abs(CPXe)/steplen);CEx(4)=ceil(CR/steplen);
+            CEy(1)=ceil(abs(CPY0)/steplen);CEy(2)=0;CEy(3)=ceil(abs(abs(CPYe)-CR)/steplen);CEy(4)=ceil(CR/steplen);
+        case 224        %2-1-4
+            CEx(1)=ceil(CR/steplen);CEx(2)=ceil(abs(CPX0)/steplen);CEx(3)=0;CEx(4)=ceil(abs(abs(CPXe)-CR)/steplen);
+            CEy(1)=ceil(CR/steplen);CEy(2)=ceil(abs(abs(CPY0)-CR)/steplen);CEy(3)=0;CEy(4)=ceil(abs(CPYe)/steplen);
+        case 231        %3-2-1
+            CEx(1)=ceil(abs(CPXe)/steplen);CEx(2)=ceil(CR/steplen);CEx(3)=ceil(abs(abs(CPX0)-CR)/steplen);CEx(4)=0;
+            CEy(1)=ceil(abs(abs(CPYe)-CR)/steplen);CEy(2)=ceil(CR/steplen);CEy(3)=ceil(abs(CPY0)/steplen);CEy(4)=0;
+        case 242        %4-3-2
+            CEx(1)=0;CEx(2)=ceil(abs(abs(CPXe)-CR)/steplen);CEx(3)=ceil(CR/steplen);CEx(4)=ceil(abs(CPX0)/steplen);
+            CEy(1)=0;CEy(2)=ceil(abs(CPYe)/steplen);CEy(3)=ceil(CR/steplen);CEy(4)=ceil(abs(abs(CPY0)-CR)/steplen);
+        case 212        %1-4-3-2
+            CEx(1)=ceil(abs(abs(CPX0)-CR)/steplen);CEx(2)=ceil(abs(abs(CPXe)-CR)/steplen);CEx(3)=ceil(CR/steplen);CEx(4)=ceil(CR/steplen);
+            CEy(1)=ceil(abs(CPY0)/steplen);CEy(2)=ceil(abs(CPYe)/steplen);CEy(3)=ceil(CR/steplen);CEy(4)=ceil(CR/steplen);
+        case 223        %2-1-4-3
+            CEx(1)=ceil(CR/steplen);CEx(2)=ceil(abs(CPX0)/steplen);CEx(3)=ceil(abs(CPXe)/steplen);CEx(4)=ceil(CR/steplen);
+            CEy(1)=ceil(CR/steplen);CEy(2)=ceil(abs(abs(CPY0)-CR)/steplen);CEy(3)=ceil(abs(abs(CPYe)-CR)/steplen);CEy(4)=ceil(CR/steplen);
+        case 234        %3-2-1-4
+            CEx(1)=ceil(CR/steplen);CEx(2)=ceil(CR/steplen);CEx(3)=ceil(abs(abs(CPX0)-CR)/steplen);CEx(4)=ceil(abs(abs(CPXe)-CR)/steplen);
+            CEy(1)=ceil(CR/steplen);CEy(2)=ceil(CR/steplen);CEy(3)=ceil(abs(CPY0)/steplen);CEy(4)=ceil(abs(CPYe)/steplen);
+        case 241        %4-3-2-1
+            CEx(1)=ceil(abs(CPXe)/steplen);CEx(2)=ceil(CR/steplen);CEx(3)=ceil(CR/steplen);CEx(4)=ceil(abs(CPX0)/steplen);
+            CEy(1)=ceil(abs(abs(CPYe)-CR)/steplen);CEy(2)=ceil(CR/steplen);CEy(3)=ceil(CR/steplen);CEy(4)=ceil(abs(abs(CPYe)-CR)/steplen);
+        otherwise
+    end
+    fprintf("Cinf: %d\r\n", Cinf);
+    disp("CEx");
+    disp(CEx);
+    disp("CEy");
+    disp(CEy);
+    if clockwise==0   %逆圆弧
+        while CEx(1)>0 || CEx(2)>0 || CEx(3)>0 || CEx(4)>0 || CEy(1)>0 || CEy(2)>0 || CEy(3)>0 || CEy(4)>0
+            if xflag
+                Jrx=Jrx+Jvx;
+            end
+            if yflag
+                Jry=Jry+Jvy;
+            end
+            if CPx>0 && CPy>=0   %1象限
+                if Jrx>=OF     %x溢出
+                    Jrx=Jrx-OF;
+                    PX2=PX1-steplen;
+                    Jvy=Jvy-dx; 
+                    if CEx(1)>1 
+                        CEx(1)=CEx(1)-1;
+                    else      
+                        CEx(1)=CEx(1)-1;
+                        xflag=0;
+                    end
+                end
+                if Jry>=OF    %y溢出
+                    Jry=Jry-OF;
+                    PY2=PY1+steplen;
+                    Jvx=Jvx+dy;  
+                    if CEy(1)>1 
+                        CEy(1)=CEy(1)-1;
+                    else  
+                        CEy(1)=CEy(1)-1;
+                        yflag=0;
+                    end
+                end
+                if PX2-CXr==0 && CEy(1)>0
+                    CEy(2)=CEy(2)-CEy(1);
+                    CEy(1)=0;
+                end
+                if CEx(1)<=0 && CEy(1)<=0
+                    xflag=1;
+                    yflag=1;
+                    Jrx=0;
+                    Jry=0;
+                end
+            elseif CPx<=0 && CPy>0 %2象限
+                if Jrx>=OF     %x溢出
+                    Jrx=Jrx-OF;
+                    PX2=PX1-steplen;
+                    Jvy=Jvy+dx; 
+                    if CEx(2)>1 
+                        CEx(2)=CEx(2)-1;
+                    else      
+                        CEx(2)=CEx(2)-1;
+                        Jrx=0;
+                        xflag=0;
+                    end
+                end
+                if Jry>=OF    %y溢出
+                    Jry=Jry-OF;
+                    PY2=PY1-steplen;
+                    Jvx=Jvx-dy;  
+                    if CEy(2)>1 
+                        CEy(2)=CEy(2)-1;
+                    else  
+                        CEy(2)=CEy(2)-1;
+                        Jry=0;
+                        yflag=0;
+                    end
+                end
+                if PY2-CYr==0 && CEx(2)>0
+                    CEx(3)=CEx(3)-CEx(2);
+                    CEx(2)=0;
+                end
+                if CEx(2)<=0 && CEy(2)<=0
+                    xflag=1;
+                    yflag=1;
+                    Jrx=0;
+                    Jry=0;
+                end
+            elseif CPx<0 && CPy<=0 %3象限
+                if Jrx>=OF     %x溢出
+                    Jrx=Jrx-OF;
+                    PX2=PX1+steplen;
+                    Jvy=Jvy-dx; 
+                    if CEx(3)>1 
+                        CEx(3)=CEx(3)-1;
+                    else      
+                        CEx(3)=CEx(3)-1;
+                        xflag=0;
+                    end
+                end
+                if Jry>=OF    %y溢出
+                    Jry=Jry-OF;
+                    PY2=PY1-steplen;
+                    Jvx=Jvx+dy;  
+                    if CEy(3)>1 
+                        CEy(3)=CEy(3)-1;
+                    else  
+                        CEy(3)=CEy(3)-1;
+                        yflag=0;
+                    end
+                end
+
+                if PX2-CXr==0 && CEy(3)>0
+                    CEy(4)=CEy(4)-CEy(3);
+                    CEy(3)=0;
+                end                
+                if CEx(3)<=0 && CEy(3)<=0
+                    CEy(3)=0;
+                    xflag=1;
+                    yflag=1;
+                    Jrx=0;
+                    Jry=0;
+                end
+                
+            elseif CPx>=0 && CPy<0 %4象限
+                if Jrx>=OF     %x溢出
+                    Jrx=Jrx-OF;
+                    PX2=PX1+steplen;
+                    Jvy=Jvy+dx; 
+                    if CEx(4)>1 
+                        CEx(4)=CEx(4)-1;
+                    else      
+                        CEx(4)=CEx(4)-1;
+                        xflag=0;
+                    end
+                end
+                if Jry>=OF    %y溢出
+                    Jry=Jry-OF;
+                    PY2=PY1+steplen;
+                    Jvx=Jvx-dy;  
+                    if CEy(4)>1 
+                        CEy(4)=CEy(4)-1;
+                    else  
+                        CEy(4)=CEy(4)-1;
+                        yflag=0;
+                    end
+                end
+
+                if PY2-CYr==0 && CEx(4)>0
+                    CEx(1)=CEx(1)-CEx(4);
+                    CEx(4)=0;
+                end
+                if CEx(4)<=0 && CEy(4)<=0
+                    CEy(4)=0;
+                    xflag=1;
+                    yflag=1;
+                    Jrx=0;
+                    Jry=0;
+                end 
+            end
+            if(PX1 == PX2 && PY1 == PY2)
             else
-                F=F-2*steplen*CPy+steplen^2;
-                plot([X,X],[Y,Y-dy],'b','linewidth',1)
-                Y=Y-dy;
+                plot([PX1,PX2],[PY1,PY2],'b','linewidth',1);
                 pause(1/speed);
             end
+            PX1 = PX2;
+            PY1 = PY2;
+            CPx=PX1-CXr;
+            CPy=PY1-CYr;
         end
-        if CPx<=0 && CPy<0   %3象限
-            if F>=0
-                F=F+2*steplen*CPy+steplen^2;
-                plot([X,X],[Y,Y+dy],'b','linewidth',1)
-                Y=Y+dy;
-                pause(1/speed);
-            else
-                F=F-2*steplen*CPx+steplen^2;
-                plot([X,X-dx],[Y,Y],'b','linewidth',1)
-                X=X-dx;
-                pause(1/speed);
+    else   %圆弧
+        while CEx(1)>0 || CEx(2)>0 || CEx(3)>0 || CEx(4)>0 || CEy(1)>0 || CEy(2)>0 || CEy(3)>0 || CEy(4)>0
+            if xflag
+                Jrx=Jrx+Jvx;
             end
-        end
-        if CPx<0 && CPy>=0   %2象限
-            if F>=0
-                F=F+2*steplen*CPx+steplen^2;
-                plot([X,X+dx],[Y,Y],'b','linewidth',1)
-                X=X+dx;
-                pause(1/speed);
-            else
-                F=F+2*steplen*CPy+steplen^2;
-                plot([X,X],[Y,Y+dy],'b','linewidth',1)
-                Y=Y+dy;
-                pause(1/speed);
+            if yflag
+                Jry=Jry+Jvy;
             end
-        end
-        if CPx>=0 && CPy>0   %1象限
-            if F>=0
-                F=F-2*steplen*CPy+steplen^2;
-                plot([X,X],[Y,Y-dy],'b','linewidth',1)
-                Y=Y-dy;
-                pause(1/speed);
-            else
-                F=F+2*steplen*CPx+steplen^2;
-                plot([X,X+dx],[Y,Y],'b','linewidth',1)
-                X=X+dx;
-                pause(1/speed);
+            if CPx>=0 && CPy>0   %1象限
+                if Jrx>=OF     %x溢出
+                    Jrx=Jrx-OF;
+                    PX2=PX1+steplen;
+                    Jvy=Jvy+dx; 
+                    if CEx(1)>1 
+                        CEx(1)=CEx(1)-1;
+                    else      
+                        CEx(1)=CEx(1)-1;
+                        xflag=0;
+                    end
+                end
+                if Jry>=OF    %y溢出
+                    Jry=Jry-OF;
+                    PY2=PY1-steplen;
+                    Jvx=Jvx-dy;  
+                    if CEy(1)>1 
+                        CEy(1)=CEy(1)-1;
+                    else  
+                        CEy(1)=CEy(1)-1;
+                        yflag=0;
+                    end
+                end
+
+                if PY2-CYr==0 && CEx(1)>0
+                    CEx(4)=CEx(4)-CEx(1);
+                    CEx(1)=0;
+                end
+                if CEx(1)<=0 && CEy(1)<=0
+                    xflag=1;
+                    yflag=1;
+                    Jrx=0;
+                    Jry=0;
+                end
+            elseif CPx<0 && CPy>=0 %2象限
+                if Jrx>=OF     %x溢出
+                    Jrx=Jrx-OF;
+                    PX2=PX1+steplen;
+                    Jvy=Jvy-dx; 
+                    if CEx(2)>1 
+                        CEx(2)=CEx(2)-1;
+                    else      
+                        CEx(2)=CEx(2)-1;
+                        Jrx=0;
+                        xflag=0;
+                    end
+                end
+                if Jry>=OF    %y溢出
+                    Jry=Jry-OF;
+                    PY2=PY1+steplen;
+                    Jvx=Jvx+dy;  
+                    if CEy(2)>1 
+                        CEy(2)=CEy(2)-1;
+                    else  
+                        CEy(2)=CEy(2)-1;
+                        Jry=0;
+                        yflag=0;
+                    end
+                end
+
+                if PX2-CXr==0 && CEy(2)>0
+                    CEy(1)=CEy(1)-CEy(2);
+                    CEy(2)=0;
+                end
+                if CEx(2)<=0 && CEy(2)<=0
+                    xflag=1;
+                    yflag=1;
+                    Jrx=0;
+                    Jry=0;
+                end
+            elseif CPx<=0 && CPy<0 %3象限
+                if Jrx>=OF     %x溢出
+                    Jrx=Jrx-OF;
+                    PX2=PX1-steplen;
+                    Jvy=Jvy+dx; 
+                    if CEx(3)>1 
+                        CEx(3)=CEx(3)-1;
+                    else      
+                        CEx(3)=CEx(3)-1;
+                        xflag=0;
+                    end
+                end
+                if Jry>=OF    %y溢出
+                    Jry=Jry-OF;
+                    PY2=PY1+steplen;
+                    Jvx=Jvx-dy;  
+                    if CEy(3)>1 
+                        CEy(3)=CEy(3)-1;
+                    else  
+                        CEy(3)=CEy(3)-1;
+                        yflag=0;
+                    end
+                end
+
+                if PY2-CYr==0 && CEx(3)>0
+                    CEx(2)=CEx(2)-CEx(3);
+                    CEx(3)=0;
+                end
+                if CEx(3)<=0 && CEy(3)<=0
+                    CEy(3)=0;
+                    xflag=1;
+                    yflag=1;
+                    Jrx=0;
+                    Jry=0;
+                end
+            elseif CPx>0 && CPy<=0 %4象限
+                if Jrx>=OF     %x溢出
+                    Jrx=Jrx-OF;
+                    PX2=PX1-steplen;
+                    Jvy=Jvy-dx; 
+                    if CEx(4)>1 
+                        CEx(4)=CEx(4)-1;
+                    else      
+                        CEx(4)=CEx(4)-1;
+                        xflag=0;
+                    end
+                end
+                if Jry>=OF    %y溢出
+                    Jry=Jry-OF;
+                    PY2=PY1-steplen;
+                    Jvx=Jvx+dy;  
+                    if CEy(4)>1 
+                        CEy(4)=CEy(4)-1;
+                    else  
+                        CEy(4)=CEy(4)-1;
+                        yflag=0;
+                    end
+                end
+                if PX2-CXr==0 && CEy(4)>0
+                    CEy(3)=CEy(3)-CEy(4);
+                    CEy(4)=0;
+                end
+                if CEx(4)<=0 && CEy(4)<=0
+                    CEy(4)=0;
+                    xflag=1;
+                    yflag=1;
+                    Jrx=0;
+                    Jry=0;
+                end
             end
+            if(PX1 == PX2 && PY1 == PY2)
+                else
+                    plot([PX1,PX2],[PY1,PY2],'b','linewidth',1);
+                    pause(1/speed);
+            end
+            PX1 = PX2;
+            PY1 = PY2;
+            CPx=PX1-CXr;
+            CPy=PY1-CYr;
         end
-        CPx=X-CXr;
-        CPy=Y-CYr;
     end
 end
 
@@ -1509,3 +2694,10 @@ function clockwise_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object creation, after setting all properties.
+function contcircle_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to contcircle (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
