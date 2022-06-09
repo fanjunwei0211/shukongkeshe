@@ -2051,6 +2051,10 @@ if ruinmode==0 %DDA法
             dy=dy*2;
         end
     end
+    if CX0-CXe==0 && CY0==CYe
+        warndlg("不支持整圆插补")
+        return;
+    end
     %插补准备判断象限计算步数
     if clockwise==0   %逆圆弧
         if CPX0>0 && CPY0>=0       %逆圆弧1象限
@@ -2099,15 +2103,31 @@ if ruinmode==0 %DDA法
     
     switch Cinf
         case 111    %逆圆弧1-->1
+            if CX0-CXe<0
+                warndlg("不支持该插补类型")
+                return;
+            end
             CEx(1)=ceil(abs(CX0-CXe)/steplen);CEx(2)=0;CEx(3)=0;CEx(4)=0;
             CEy(1)=ceil(abs(CY0-CYe)/steplen);CEy(2)=0;CEy(3)=0;CEy(4)=0;
         case 122
+            if CX0-CXe<0
+                warndlg("不支持该插补类型")
+                return;
+            end
             CEx(1)=0;CEx(2)=ceil(abs(CX0-CXe)/steplen);CEx(3)=0;CEx(4)=0;
             CEy(1)=0;CEy(2)=ceil(abs(CY0-CYe)/steplen);CEy(3)=0;CEy(4)=0;
         case 133
+            if CX0-CXe>0
+                warndlg("不支持该插补类型")
+                return;
+            end
             CEx(1)=0;CEx(2)=0;CEx(3)=ceil(abs(CX0-CXe)/steplen);CEx(4)=0;
             CEy(1)=0;CEy(2)=0;CEy(3)=ceil(abs(CY0-CYe)/steplen);CEy(4)=0;
         case 144
+            if CX0-CXe>0
+                warndlg("不支持该插补类型")
+                return;
+            end
             CEx(1)=0;CEx(2)=0;CEx(3)=0;CEx(4)=ceil(abs(CX0-CXe)/steplen);
             CEy(1)=0;CEy(2)=0;CEy(3)=0;CEy(4)=ceil(abs(CY0-CYe)/steplen);
         case 112
@@ -2148,15 +2168,31 @@ if ruinmode==0 %DDA法
             CEy(1)=ceil(CR/steplen);CEy(2)=ceil(CR/steplen);CEy(3)=ceil(abs(CPYe)/steplen);CEy(4)=ceil(abs(CPY0)/steplen);
         %----------------------顺圆弧--------------------------------
         case 211    %顺圆弧1-->1
+            if CX0-CXe>0
+                warndlg("不支持该插补类型")
+                return;
+            end
             CEx(1)=ceil(abs(CX0-CXe)/steplen);CEx(2)=0;CEx(3)=0;CEx(4)=0;
             CEy(1)=ceil(abs(CY0-CYe)/steplen);CEy(2)=0;CEy(3)=0;CEy(4)=0;
         case 222
+            if CX0-CXe>0
+                warndlg("不支持该插补类型")
+                return;
+            end
             CEx(1)=0;CEx(2)=ceil(abs(CX0-CXe)/steplen);CEx(3)=0;CEx(4)=0;
             CEy(1)=0;CEy(2)=ceil(abs(CY0-CYe)/steplen);CEy(3)=0;CEy(4)=0;
         case 233
+            if CX0-CXe<0
+                warndlg("不支持该插补类型")
+                return;
+            end
             CEx(1)=0;CEx(2)=0;CEx(3)=ceil(abs(CX0-CXe)/steplen);CEx(4)=0;
             CEy(1)=0;CEy(2)=0;CEy(3)=ceil(abs(CY0-CYe)/steplen);CEy(4)=0;
         case 244
+            if CX0-CXe<0
+                warndlg("不支持该插补类型")
+                return;
+            end
             CEx(1)=0;CEx(2)=0;CEx(3)=0;CEx(4)=ceil(abs(CX0-CXe)/steplen);
             CEy(1)=0;CEy(2)=0;CEy(3)=0;CEy(4)=ceil(abs(CY0-CYe)/steplen);
         case 214        %1-4
@@ -2164,9 +2200,9 @@ if ruinmode==0 %DDA法
             CEy(1)=ceil(abs(CPY0)/steplen);CEy(2)=0;CEy(3)=0;CEy(4)=ceil(abs(CPYe)/steplen);
         case 243
             CEx(1)=0;CEx(2)=0;CEx(3)=ceil(abs(CPXe)/steplen);CEx(4)=ceil(abs(CPX0)/steplen);
-            CEy(1)=0;CEy(2)=0;CEy(3)=ceil(abs(CPYe)/steplen);CEy(4)=ceil(abs(abs(CPY0)-CR)/steplen);
+            CEy(1)=0;CEy(2)=0;CEy(3)=ceil(abs(abs(CPYe)-CR)/steplen);CEy(4)=ceil(abs(abs(CPY0)-CR)/steplen);
         case 232
-            CEx(1)=0;CEx(2)=ceil(bas(abs(CPXe)-CR)/steplen);CEx(3)=ceil(abs(abs(CPX0)-CR)/steplen);CEx(4)=0;
+            CEx(1)=0;CEx(2)=ceil(abs(abs(CPXe)-CR)/steplen);CEx(3)=ceil(abs(abs(CPX0)-CR)/steplen);CEx(4)=0;
             CEy(1)=0;CEy(2)=ceil(abs(CPYe)/steplen);CEy(3)=ceil(abs(CPY0)/steplen);CEy(4)=0;
         case 221
             CEx(1)=ceil(abs(CPXe)/steplen);CEx(2)=ceil(abs(CPX0)/steplen);CEx(3)=0;CEx(4)=0;
@@ -2194,8 +2230,9 @@ if ruinmode==0 %DDA法
             CEy(1)=ceil(CR/steplen);CEy(2)=ceil(CR/steplen);CEy(3)=ceil(abs(CPY0)/steplen);CEy(4)=ceil(abs(CPYe)/steplen);
         case 241        %4-3-2-1
             CEx(1)=ceil(abs(CPXe)/steplen);CEx(2)=ceil(CR/steplen);CEx(3)=ceil(CR/steplen);CEx(4)=ceil(abs(CPX0)/steplen);
-            CEy(1)=ceil(abs(abs(CPYe)-CR)/steplen);CEy(2)=ceil(CR/steplen);CEy(3)=ceil(CR/steplen);CEy(4)=ceil(abs(abs(CPYe)-CR)/steplen);
+            CEy(1)=ceil(abs(abs(CPYe)-CR)/steplen);CEy(2)=ceil(CR/steplen);CEy(3)=ceil(CR/steplen);CEy(4)=ceil(abs(abs(CPY0)-CR)/steplen);
         otherwise
+            
     end
     fprintf("Cinf: %d\r\n", Cinf);
     disp("CEx");
