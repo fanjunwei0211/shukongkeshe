@@ -318,9 +318,11 @@ global X0 Y0 Xe Ye;
 axes(handles.axes1);
 if (isnan(X0)||isnan(Y0)||isnan(Xe)||isnan(Ye))
     warndlg('请输入数字','警告','on');
+    return;
 end
 if ((X0==Xe)&&(Y0==Ye))
      warndlg('首尾坐标相同，输入无效，请重新输入','警告','on');
+     return;
 end
 
 plot([X0,Xe],[Y0,Ye],'k');
@@ -1047,8 +1049,13 @@ function thecircle_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global CX0 CY0 CXe CYe CR CXr CYr CA0 CAe clockwise;
 axes(handles.axes1);
+if (isnan(CX0)||isnan(CY0)||isnan(CXe)||isnan(CYe))||isnan(CXr)||isnan(CYr)||isnan(clockwise)
+    warndlg('请输入数字','警告','on');
+    return;
+end
 if ((CX0-CXr)^2+(CY0-CYr)^2)~=((CXe-CXr)^2+(CYe-CYr)^2)
     warndlg('圆心坐标错误','警告','on');
+    return;
 else
     CR=sqrt((CX0-CXr)^2+(CY0-CYr)^2);
     set(handles.CR,'string',num2str(CR));
